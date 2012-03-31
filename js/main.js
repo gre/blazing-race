@@ -11,7 +11,8 @@ $(function(){
   ,	b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape
   ,	b2CircleShape = Box2D.Collision.Shapes.b2CircleShape
   ,	b2DebugDraw = Box2D.Dynamics.b2DebugDraw
-  , b2MouseJointDef =  Box2D.Dynamics.Joints.b2MouseJointDef
+  , b2MouseJointDef = Box2D.Dynamics.Joints.b2MouseJointDef
+  , b2ContactListener = Box2D.Dynamics.b2ContactListener
   ;
 
   var DRAW_SCALE = 30;
@@ -145,11 +146,14 @@ $(function(){
 
   function World (map) {
     var self = this;
+    self.map = map;
     self.width = map.width;
     self.height = map.height;
     self.world = new Box2D.Dynamics.b2World(new Box2D.Common.Math.b2Vec2(0, 10), true);
 
     self.grounds = [];
+    self.waters = [];
+    self.candles = [];
 
     self.E = BlazingRace.util.makeEvent({});
 
@@ -186,6 +190,14 @@ $(function(){
       world.CreateBody(bodyDef).CreateFixture(fixDef);
     }
 
+    function asArray (raw) {
+      var arr = [];
+      for (var j = 0; j<raw.length/2; ++j) {
+        arr[j] = new b2Vec2((raw[2*j])/DRAW_SCALE, (raw[2*j+1])/DRAW_SCALE);
+      }
+      return arr;
+    }
+
     function init (world) {
       initBounds(world, 0.01);
       var fixDef = new b2FixtureDef;
@@ -200,25 +212,37 @@ $(function(){
         var value = map.objects[type];
         if (type == "grounds") {
           for (var i = 0; i<value.length; ++i) {
-            var groundRaw = value[i];
-            var arr = [];
-            var centerx = groundRaw[0];
-            var centery = groundRaw[1];
-            for (var j = 0; j<groundRaw.length/2; ++j) {
-              arr[j] = new b2Vec2((groundRaw[2*j]-centerx)/DRAW_SCALE, (groundRaw[2*j+1]-centery)/DRAW_SCALE);
-            }
+            var arr = asArray(value[i]);
             fixDef.shape.SetAsArray(arr, arr.length);
-            bodyDef.position.Set(centerx/DRAW_SCALE, centery/DRAW_SCALE);
+            bodyDef.position.Set(0,0);
             var ground = world.CreateBody(bodyDef);
             ground.CreateFixture(fixDef);
+            ground.SetUserData({ type: "ground" });
             self.grounds.push(ground);
           }
         }
         if (type == "candles") {
-
+          for (var i = 0; i<value.length; ++i) {
+            var raw = value[i];
+            var x = raw[0], y = raw[1];
+            fixDef.shape.SetAsBox(0.3, 0.3);
+            bodyDef.position.Set(x/DRAW_SCALE, y/DRAW_SCALE);
+            var body = world.CreateBody(bodyDef);
+            body.SetUserData({ type: "candle" });
+            body.CreateFixture(fixDef);
+            self.candles.push(body);
+          }
         }
         if (type == "waters") {
-
+          for (var i = 0; i<value.length; ++i) {
+            var arr = asArray(value[i]);
+            fixDef.shape.SetAsArray(arr, arr.length);
+            bodyDef.position.Set(0,0);
+            var water = world.CreateBody(bodyDef);
+            water.SetUserData({ type: "water" });
+            water.CreateFixture(fixDef);
+            self.waters.push(water);
+          }
         }
       }
     }
@@ -245,6 +269,7 @@ $(function(){
       fixDef.restitution = 0.1;
       fixDef.shape = new b2CircleShape(size);
       player.CreateFixture(fixDef);
+      player.SetUserData({ type: "player" });
       return player;
     }
 
@@ -297,9 +322,9 @@ $(function(){
     self.player = player;
     self.camera = camera;
     self.mouse = mouse;
-    self.startTime = 0;
 
-    var oxygen = 1;
+    self.startTime = 0;
+    self.candleCount = 0;
 
     mouse.E.sub("down", function (canvasPosition) {
       var click = camera.getRealPosition(canvasPosition);
@@ -316,6 +341,36 @@ $(function(){
 
     function start() {
       self.startTime = +new Date();
+      var contactListener = new b2ContactListener;
+      contactListener.BeginContact = function (contact) {
+        var aData = contact.GetFixtureA().GetBody().GetUserData();
+        var bData = contact.GetFixtureB().GetBody().GetUserData();
+        if (aData && bData) {
+          if (aData.type=="water" && bData.type=="player") {
+            player.oxygen = 0;
+          }
+          else if (aData.type=="candle" && bData.type=="player") {
+            if (player.oxygen && !aData.lighted) {
+              aData.lighted = true;
+              contact.GetFixtureA().GetBody().SetUserData(aData);
+              ++ self.candleCount;
+            }
+          }
+        }
+      }
+      self.world.world.SetContactListener(contactListener);
+    }
+
+    function won () {
+      return self.candleCount >= world.map.candlesToWin;
+    }
+
+    self.checkGameState = function () {
+      if (won())
+        return 1;
+      if (player.isDead())
+        return -1;
+      return 0;
     }
 
     self.start = function () {
@@ -360,7 +415,7 @@ $(function(){
 		  pe.init();
     }
 
-    var coal = loader.getResource("coal");
+    var coal;
 
     function drawBackground () {
       ctx.fillStyle = 'rgb(100, 70, 50)';
@@ -382,17 +437,47 @@ $(function(){
       s.fill();
    }
 
-    function drawGrounds (grounds) {
-      for (var i = 0; i < grounds.length; ++i) {
-        var position = grounds[i].GetPosition();
-         for (var fixture = grounds[i].GetFixtureList(); fixture; fixture = fixture.GetNext()) {
-           ctx.fillStyle = 'rgb(0, 0, 0)';
-           ctx.save();
-           var shape = fixture.GetShape();
-           ctx.translate(position.x*DRAW_SCALE, position.y*DRAW_SCALE);
-           fillPolygon(shape.GetVertices());
-           ctx.restore();
-         }
+    function drawGround (ground) {
+      var position = ground.GetPosition();
+      for (var fixture = ground.GetFixtureList(); fixture; fixture = fixture.GetNext()) {
+        ctx.fillStyle = 'rgb(0, 0, 0)';
+        ctx.save();
+        var shape = fixture.GetShape();
+        ctx.translate(position.x*DRAW_SCALE, position.y*DRAW_SCALE);
+        fillPolygon(shape.GetVertices());
+        ctx.restore();
+      }
+    }
+
+    function drawWater (water) {
+      var position = water.GetPosition();
+      for (var fixture = water.GetFixtureList(); fixture; fixture = fixture.GetNext()) {
+        ctx.fillStyle = 'rgba(100, 150, 255, 0.6)';
+        ctx.save();
+        var shape = fixture.GetShape();
+        ctx.translate(position.x*DRAW_SCALE, position.y*DRAW_SCALE);
+        fillPolygon(shape.GetVertices());
+        ctx.restore();
+      }
+    }
+
+    var candleOn, candleOff, CANDLE_W = 30, CANDLE_H = 30;
+
+    function drawCandle (candle) {
+      var position = candle.GetPosition();
+      for (var fixture = candle.GetFixtureList(); fixture; fixture = fixture.GetNext()) {
+        ctx.save();
+        var lighted = fixture.GetBody().GetUserData().lighted;
+        ctx.translate(position.x*DRAW_SCALE, position.y*DRAW_SCALE);
+        if (lighted) {
+          ctx.fillStyle = 'rgb(255, 200, 150)';
+          ctx.drawImage(candleOn, -CANDLE_W/2, -CANDLE_W/2-(CANDLE_H-CANDLE_W), CANDLE_W, CANDLE_H);
+        }
+        else {
+          ctx.fillStyle = 'rgb(200, 170, 160)';
+          ctx.drawImage(candleOff, -CANDLE_W/2, -CANDLE_W/2-(CANDLE_H-CANDLE_W), CANDLE_W, CANDLE_H);
+        }
+        ctx.restore();
       }
     }
 
@@ -442,8 +527,15 @@ $(function(){
 
       if (DEBUG) world.DrawDebugData();
 
-      drawGrounds(game.world.grounds);
-
+      for (var i = 0; i < game.world.waters.length; ++i) {
+        drawWater(game.world.waters[i]);
+      }
+      for (var i = 0; i < game.world.grounds.length; ++i) {
+        drawGround(game.world.grounds[i]);
+      }
+      for (var i = 0; i < game.world.candles.length; ++i) {
+        drawCandle(game.world.candles[i]);
+      }
       drawPlayer(game.player);
       ctx.restore();
     }
@@ -451,7 +543,9 @@ $(function(){
     var lastSeconds, lastMinutes;
     var $seconds = node.find(".chrono .seconds");
     var $minutes = node.find(".chrono .minutes");
+    var ended = false;
     function DOM_render () {
+      if (ended) return;
       var duration = +new Date() - game.startTime;
       var seconds = Math.floor(duration / 1000) % 60;
       var minutes = Math.floor(duration / 60000) % 60;
@@ -463,9 +557,35 @@ $(function(){
         $minutes.text(minutes);
         lastMinutes = minutes;
       }
+
+      var state = game.checkGameState();
+      if (state) {
+        ended = true;
+        if (state>0) {
+          win();
+        }
+        else {
+          lose();
+        }
+      }
+    }
+
+    var $end = node.find(".end");
+
+    function win() {
+      $end.fadeIn().find(".message").text("All candles are lighted! You succeed!");
+    }
+
+    function lose() {
+      $end.fadeIn().find(".message").text("You haven't kept the fame lighted!");
     }
 
     this.start = function () {
+      coal = loader.getResource("coal");
+      candleOn = loader.getResource("candle-on");
+      candleOff = loader.getResource("candle-off");
+      CANDLE_H = Math.floor(CANDLE_W * candleOn.height/candleOn.width);
+
       setup();
       requestAnimFrame(function loop () {
         requestAnimFrame(loop);
@@ -481,13 +601,16 @@ $(function(){
 
 (function main () {
 
+
+
 var MAP_BIG = {
   width: 2000,
   height: 1000,
   start: { x: 50, y: 100 },
+  candlesToWin: 1,
   objects: {
     candles: [
-      [200, 900]
+      [200, 50]
     ],
     grounds: [ 
       [ 20, 130, 
@@ -496,7 +619,10 @@ var MAP_BIG = {
         20, 150 ]
     ],
     waters: [
-      
+      [ 120, 230, 
+        200, 230, 
+        200, 250, 
+        120, 250 ]
     ]
   }
 }
@@ -515,7 +641,9 @@ var MAP_BIG = {
   var H = 600;
 
   var loader = new GfxLoader([
-    "coal"
+    "coal",
+    "candle-off",
+    "candle-on"
   ], "gfx/", ".png");
   var world = new World(MAP);
   var player = new Player(world, MAP.start.x, MAP.start.y);
