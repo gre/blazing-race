@@ -21,6 +21,8 @@ $(function(){
   , b2ContactListener = Box2D.Dynamics.b2ContactListener
   ;
 
+  var isMobile = /ipad|iphone|android/i.test(navigator.userAgent);
+
   var DRAW_SCALE = 30;
 
   DEBUG = false;
@@ -72,6 +74,10 @@ $(function(){
 
     self.E = BlazingRace.util.makeEvent({});
 
+    self.getPosition = function () {
+      return new b2Vec2(self.x, self.y);
+    }
+
     self.getRealPosition = function (p) {
       return new b2Vec2(
         (-self.x + p.x)/DRAW_SCALE,
@@ -119,32 +125,49 @@ $(function(){
   function MouseControls (node) {
     var self = this;
     var position = { x: 0, y: 0 };
+    var pressed = false;
     self.E = BlazingRace.util.makeEvent({});
 
     function getCanvasPosition (e) {
       var o = node.offset();
       var x = e.clientX;
       var y = e.clientY;
+      if (e.touches) {
+        var touch = e.touches[0];
+        if (touch) {
+          x = touch.pageX;
+          y = touch.pageY;
+        }
+      }
       return { 
         x: x-(o.left-$(window).scrollLeft()), 
         y: y-(o.top-$(window).scrollTop())
       };
     }
 
-    node.on("mousemove", function (e) {
+    self.getPosition = function () {
+      return new b2Vec2(position.x, position.y);
+    }
+    self.isPressed = function () {
+      return pressed;
+    }
+
+    node.on(isMobile ? "touchmove" : "mousemove", function (e) {
       e.preventDefault();
       position = getCanvasPosition(e);
       self.E.pub("move", position);
     });
-    node.on("mousedown", function (e) {
+    node.on(isMobile ? "touchstart" : "mousedown", function (e) {
       e.preventDefault();
+      pressed = true;
       position = getCanvasPosition(e);
-      self.E.pub("down", position);
+      self.E.pub("start", position);
     });
-    node.on("mouseup", function (e) {
+    node.on(isMobile ? "touchend" : "mouseup", function (e) {
       e.preventDefault();
+      pressed = false;
       position = getCanvasPosition(e);
-      self.E.pub("up", position);
+      self.E.pub("end", position);
     });
 
     self.start = function () {}
@@ -271,7 +294,7 @@ $(function(){
       bodyDef.type = b2Body.b2_dynamicBody;
       bodyDef.position.x = x;
       bodyDef.position.y = y;
-      bodyDef.angularDamping = 0.2;
+      //bodyDef.angularDamping = 0.2;
       var player = self.world.CreateBody(bodyDef);
       var fixDef = new b2FixtureDef;
       fixDef.density = 1.0;
@@ -336,13 +359,27 @@ $(function(){
     self.startTime = 0;
     self.candleCount = 0;
 
-    mouse.E.sub("down", function (canvasPosition) {
-      var click = camera.getRealPosition(canvasPosition);
+    self.getPlayerVector = function (p) {
+      var click = camera.getRealPosition(p);
       var position = player.body.GetPosition();
       var force = click.Copy();
       force.Subtract(position);
+      return force;
+    }
+
+
+    self.MAX_DIST = 5;
+
+    self.getIntensity = function (dist) {
+      return smoothstep(0, self.MAX_DIST, dist);
+    }
+
+
+    mouse.E.sub("start", function (canvasPosition) {
+      var position = player.body.GetPosition();
+      var force = self.getPlayerVector(canvasPosition);
       var dist = force.Normalize();
-      var intensity = smoothstep(0, 5, dist);
+      var intensity = self.getIntensity(dist);
       var power = player.consumePower(intensity);
 
       force.Multiply(power);
@@ -534,6 +571,34 @@ $(function(){
       ctx.restore();
     }
 
+    function drawPowerCircle (mouse) {
+      var pos = game.player.body.GetPosition();
+      var p = game.getPlayerVector(mouse.getPosition());
+      var dist = p.Normalize();
+      var intensity = game.getIntensity(dist);
+      dist = clamp(0, game.player.power*game.MAX_DIST, dist);
+      var powerDist = game.player.power * game.MAX_DIST;
+      
+      var OPEN = 0.06 * Math.PI;
+      var fromAngle = Math.atan2(p.y, p.x) + OPEN/2;
+      var toAngle = fromAngle + 2*Math.PI - OPEN;
+      
+      var opacity = 0.3*smoothstep(0.1, 0.3, game.player.power) + 0.1 * smoothstep(0.95, 1.0, game.player.power);
+
+      ctx.save();
+      ctx.translate(pos.x*DRAW_SCALE, pos.y*DRAW_SCALE);
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgba(50, 150, 255, '+opacity+')';
+      ctx.fillStyle = 'rgba(50, 150, 255, '+opacity+')';
+      ctx.lineWidth = 5;
+      ctx.arc(0, 0, powerDist*DRAW_SCALE, fromAngle, toAngle);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(dist*p.x*DRAW_SCALE, dist*p.y*DRAW_SCALE, (game.player.power)*12, 0, 2*Math.PI);
+      ctx.stroke();
+      ctx.restore();
+    }
+
     function render () {
       var world = game.world.world;
       ctx.save();
@@ -553,6 +618,8 @@ $(function(){
         drawCandle(game.world.candles[i]);
       }
       drawPlayer(game.player);
+      drawPowerCircle(game.mouse);
+
       ctx.restore();
     }
 
