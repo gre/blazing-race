@@ -1,3 +1,9 @@
+/**
+ * ~ Blazing Race ~
+ * Apache Licence 2.0
+ * Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>
+ * 2012
+ */
 $(function(){
   var b2Vec2 = Box2D.Common.Math.b2Vec2
   , b2AABB = Box2D.Collision.b2AABB
@@ -176,18 +182,22 @@ $(function(){
       fixDef.shape.SetAsBox(self.width / DRAW_SCALE, BORDER);
 
       bodyDef.position.Set(0, self.height / DRAW_SCALE);
-      world.CreateBody(bodyDef).CreateFixture(fixDef);
+      (body=world.CreateBody(bodyDef)).CreateFixture(fixDef);
+      self.grounds.push(body);
 
       bodyDef.position.Set(0, 0);
-      world.CreateBody(bodyDef).CreateFixture(fixDef);
+      (body=world.CreateBody(bodyDef)).CreateFixture(fixDef);
+      self.grounds.push(body);
 
       fixDef.shape.SetAsBox(BORDER, self.height / DRAW_SCALE);
       
       bodyDef.position.Set(0, 0);
-      world.CreateBody(bodyDef).CreateFixture(fixDef);
+      (body=world.CreateBody(bodyDef)).CreateFixture(fixDef);
+      self.grounds.push(body);
 
       bodyDef.position.Set(self.width / DRAW_SCALE, 0);
-      world.CreateBody(bodyDef).CreateFixture(fixDef);
+      (body=world.CreateBody(bodyDef)).CreateFixture(fixDef);
+      self.grounds.push(body);
     }
 
     function asArray (raw) {
@@ -199,7 +209,7 @@ $(function(){
     }
 
     function init (world) {
-      initBounds(world, 0.01);
+      initBounds(world, 20/DRAW_SCALE);
       var fixDef = new b2FixtureDef;
       fixDef.density = groundFixDef.density;
       fixDef.friction = groundFixDef.friction;
@@ -284,7 +294,7 @@ $(function(){
     self.size = 0.5;
     self.body = world.createPlayerBody(self.size, _x/DRAW_SCALE, _y/DRAW_SCALE);
 
-    var POWER_FORCE = 12;
+    var POWER_FORCE = 15;
     var POWER_LOAD_SPEED = 4000;
 
     self.oxygen = 1;
@@ -428,11 +438,17 @@ $(function(){
       var s = ctx;
       var drawScale = DRAW_SCALE;
       s.beginPath();
-      s.moveTo(vertices[0].x * drawScale, vertices[0].y * drawScale);
+      s.moveTo(Math.floor(vertices[0].x * drawScale), Math.floor(vertices[0].y * drawScale));
       for (var i = 1; i < vertexCount; i++) {
-         s.lineTo(vertices[i].x * drawScale, vertices[i].y * drawScale);
+         s.lineTo(
+             Math.floor(vertices[i].x * drawScale), 
+             Math.floor(vertices[i].y * drawScale)
+         );
       }
-      s.lineTo(vertices[0].x * drawScale, vertices[0].y * drawScale);
+      s.lineTo(
+        Math.floor(vertices[0].x * drawScale), 
+        Math.floor(vertices[0].y * drawScale)
+      );
       s.closePath();
       s.fill();
    }
@@ -577,7 +593,7 @@ $(function(){
     }
 
     function lose() {
-      $end.fadeIn().find(".message").text("You haven't kept the fame lighted!");
+      $end.fadeIn().find(".message").text("You haven't kept the flame lighted!");
     }
 
     this.start = function () {
@@ -604,25 +620,44 @@ $(function(){
 
 
 var MAP_BIG = {
-  width: 2000,
-  height: 1000,
-  start: { x: 50, y: 100 },
-  candlesToWin: 1,
+  width: 3000,
+  height: 2250,
+  start: { x: 125, y: 485 },
+  candlesToWin: 2,
   objects: {
     candles: [
-      [200, 50]
+      //[100, 380],
+      [110, 850],
+      [1000, 2150]
     ],
     grounds: [ 
-      [ 20, 130, 
-        100, 130, 
-        100, 150, 
-        20, 150 ]
+     [ 0, 410, 200, 410, 210, 430, 0, 430 ]
+    ,[ 70, 530, 210, 530, 210, 555, 70, 555 ]
+    ,[ 200, 410, 560, 270, 580, 640, 420, 710, 210, 555 ]
+    ,[ 0, 670, 190, 660, 320, 850, 220, 850, 0, 690 ]
+    ,[ 320, 850, 520, 1120, 300, 1140, 220, 850 ]
+    ,[ 0, 940, 230, 1260, 215, 1325, 0, 1070 ]
+    ,[ 230, 1260, 570, 1260, 600, 1320, 215, 1325 ]
+    ,[ 420, 710, 580, 640, 660, 710, 1060, 1750, 930, 1800 ]
+    ,[ 130, 1430, 750, 1400, 800, 1470, 150, 1500 ]
+    ,[ 300, 1450, 350, 1450, 370, 1900, 300, 1900 ]
+    ,[ 350, 1850, 450, 1850, 450, 1900, 350, 1900 ]
+    ,[ 0, 1900, 150, 1900, 150, 1910, 0, 1910 ]
+    ,[ 120, 2000, 320, 2000, 320, 2010, 120, 2010 ]
+    ,[ 430, 2070, 1020, 2150, 1020, 2250, 450, 2250 ]
+    ,[ 450, 1570, 560, 1540, 570, 1600, 450, 1600 ]
+    ,[ 520, 2100, 520, 1600, 570, 1600, 620, 2110 ]
+    ,[ 630, 1620, 750, 1600, 800, 1700, 750, 1700, 630, 1660 ] 
+    ,[ 750, 1700, 800, 1700, 900, 1850, 750, 1820 ]
+    ,[ 580, 1750, 770, 1740, 780, 1824, 590, 1800 ]
+    ,[ 930, 1800, 1060, 1750, 1000, 2000, 980, 2020 ]
+    ,[ 700, 1920, 970, 1900, 980, 2020, 700, 2020 ]
+
+
+    // TODO
     ],
     waters: [
-      [ 120, 230, 
-        200, 230, 
-        200, 250, 
-        120, 250 ]
+      [0, 2150, 450, 2150, 450, 2250, 0, 2250]
     ]
   }
 }

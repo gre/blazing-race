@@ -4,6 +4,20 @@ html {
 body {
   background: #eee;
 }
+footer {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid white;
+  text-align: center;
+}
+
+a {
+  color: #c50;
+}
+a:hover {
+  color: #e71;
+}
+
 #wrapper {
   width: 800px;
   margin: 10px auto;
