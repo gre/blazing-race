@@ -128,7 +128,7 @@ $(function(){
     var pressed = false;
     self.E = BlazingRace.util.makeEvent({});
 
-    function getCanvasPosition (e) {
+    function syncCanvasPosition (e) {
       var o = node.offset();
       var x = e.clientX;
       var y = e.clientY;
@@ -140,10 +140,12 @@ $(function(){
         }
       }
 
-      return { 
-        x: x-(o.left-$(window).scrollLeft()), 
-        y: y-(o.top-$(window).scrollTop())
-      };
+      if (x !== undefined) {
+        position.x = x-(o.left-$(window).scrollLeft());
+      }
+      if (y !== undefined) {
+        position.y = y-(o.top-$(window).scrollTop());
+      }
     }
 
     self.getPosition = function () {
@@ -155,20 +157,20 @@ $(function(){
 
     node.on(isMobile ? "touchmove" : "mousemove", function (e) {
       e.preventDefault();
-      position = getCanvasPosition(e);
-      self.E.pub("move", position);
+      syncCanvasPosition(e);
+      self.E.pub("move", self.getPosition());
     });
     node.on(isMobile ? "touchstart" : "mousedown", function (e) {
       e.preventDefault();
       pressed = true;
-      position = getCanvasPosition(e);
-      self.E.pub("start", position);
+      syncCanvasPosition(e);
+      self.E.pub("start", self.getPosition());
     });
     node.on(isMobile ? "touchend" : "mouseup", function (e) {
       e.preventDefault();
       pressed = false;
-      //position = getCanvasPosition(e);
-      self.E.pub("end", position);
+      syncCanvasPosition(e);
+      self.E.pub("end", self.getPosition());
     });
 
     self.start = function () {}
