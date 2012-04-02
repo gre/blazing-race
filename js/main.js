@@ -78,7 +78,7 @@ $(function(){
       return new b2Vec2(self.x, self.y);
     }
 
-    self.getRealPosition = function (p) {
+    self.toRealPosition = function (p) {
       return new b2Vec2(
         (-self.x + p.x)/DRAW_SCALE,
         (-self.y + p.y)/DRAW_SCALE
@@ -125,21 +125,12 @@ $(function(){
   function MouseControls (node) {
     var self = this;
     var position = { x: 0, y: 0 };
-    var pressed = false;
     self.E = BlazingRace.util.makeEvent({});
 
     function syncCanvasPosition (e) {
       var o = node.offset();
       var x = e.clientX;
       var y = e.clientY;
-      if (e.touches) {
-        var touch = e.touches[0];
-        if (touch) {
-          x = touch.pageX;
-          y = touch.pageY;
-        }
-      }
-
       if (x !== undefined) {
         position.x = x-(o.left-$(window).scrollLeft());
       }
@@ -148,33 +139,27 @@ $(function(){
       }
     }
 
-    self.getPosition = function () {
+    function getPosition () {
       return new b2Vec2(position.x, position.y);
     }
-    self.isPressed = function () {
-      return pressed;
-    }
 
-    node.on(isMobile ? "touchmove" : "mousemove", function (e) {
-      e.preventDefault();
+    self.getCursorPosition = getPosition;
+
+    node.on("mousemove", function (e) {
       syncCanvasPosition(e);
-      self.E.pub("move", self.getPosition());
     });
-    node.on(isMobile ? "touchstart" : "mousedown", function (e) {
+    node.on("mousedown", function (e) {
       e.preventDefault();
-      pressed = true;
       syncCanvasPosition(e);
-      self.E.pub("start", self.getPosition());
-    });
-    node.on(isMobile ? "touchend" : "mouseup", function (e) {
-      e.preventDefault();
-      pressed = false;
-      syncCanvasPosition(e);
-      self.E.pub("end", self.getPosition());
+      self.E.pub("usePower", getPosition());
     });
 
     self.start = function () {}
   }
+
+  // TODO
+  function TouchControls () {}
+
 
   function World (map) {
     var self = this;
@@ -363,7 +348,7 @@ $(function(){
     self.candleCount = 0;
 
     self.getPlayerVector = function (p) {
-      var click = camera.getRealPosition(p);
+      var click = camera.toRealPosition(p);
       var position = player.body.GetPosition();
       var force = click.Copy();
       force.Subtract(position);
@@ -378,7 +363,7 @@ $(function(){
     }
 
 
-    mouse.E.sub("start", function (canvasPosition) {
+    mouse.E.sub("usePower", function (canvasPosition) {
       var position = player.body.GetPosition();
       var force = self.getPlayerVector(canvasPosition);
       var dist = force.Normalize();
@@ -599,27 +584,27 @@ $(function(){
     }
 
     var POWER_CIRCLE_OPEN = 0.06 * Math.PI;
-    function drawPowerCircle (mouse) {
+    function drawPowerCircle (controls) {
       var pos = game.player.body.GetPosition();
-      var p = game.getPlayerVector(mouse.getPosition());
-      var dist = p.Normalize();
-      var intensity = Math.min(game.getIntensity(dist), game.player.power);
-      var intensityDist = intensity * game.MAX_DIST;
+      var mouseP = controls.getCursorPosition && controls.getCursorPosition();
       var power = game.player.power;
       var powerDist = power * game.MAX_DIST;
-      
-
+      var p, dist, intensity;
       var fromAngle, toAngle;
 
-      if (isMobile) {
-        fromAngle = 0;
-        toAngle = 2*Math.PI;
-      }
-      else {
+      if (mouseP) {
+        p = game.getPlayerVector(mouseP);
+        dist = p.Normalize();
+        intensity = Math.min(game.getIntensity(dist), game.player.power);
         fromAngle = Math.atan2(p.y, p.x) + POWER_CIRCLE_OPEN/2;
         toAngle = fromAngle + 2*Math.PI - POWER_CIRCLE_OPEN;
       }
-      
+      else {
+        intensity = power;
+        fromAngle = 0;
+        toAngle = 2*Math.PI;
+      }
+      var intensityDist = intensity * game.MAX_DIST;
       var opacity = 0.3*smoothstep(0.1, 0.3, power) + 0.1 * smoothstep(0.95, 1.0, power);
 
       ctx.save();
@@ -631,7 +616,7 @@ $(function(){
       ctx.arc(0, 0, powerDist*DRAW_SCALE, fromAngle, toAngle);
       ctx.stroke();
 
-      if (!isMobile) {
+      if (p) {
         ctx.beginPath();
         ctx.arc(intensityDist*p.x*DRAW_SCALE, intensityDist*p.y*DRAW_SCALE, (intensity)*12, 0, 2*Math.PI);
         ctx.stroke();
