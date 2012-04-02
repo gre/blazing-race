@@ -441,14 +441,19 @@ $(function(){
 
     var pe;
 
+    var mapTexture = $('<canvas width="'+game.world.width+'" height="'+game.world.height+'" />')[0];
+    var mapTextureCtx = mapTexture.getContext("2d");
+
     function setup ()  {
-      var debugDraw = new Box2D.Dynamics.b2DebugDraw();
-      debugDraw.SetSprite(ctx);
-      debugDraw.SetDrawScale(DRAW_SCALE);
-			debugDraw.SetFillAlpha(0.5);
-			debugDraw.SetLineThickness(1.0);
-			debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit);
-			game.world.world.SetDebugDraw(debugDraw);
+      if (DEBUG) {
+        var debugDraw = new Box2D.Dynamics.b2DebugDraw();
+        debugDraw.SetSprite(ctx);
+        debugDraw.SetDrawScale(DRAW_SCALE);
+        debugDraw.SetFillAlpha(0.5);
+        debugDraw.SetLineThickness(1.0);
+        debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit);
+        game.world.world.SetDebugDraw(debugDraw);
+      }
 
       pe = new cParticleEmitter();
       pe.maxParticles = 250;
@@ -463,19 +468,24 @@ $(function(){
       pe.position.x = -1000;
       pe.position.y = -1000;
 		  pe.init();
+
+      cacheMapTexture();
+    }
+
+    function cacheMapTexture () {
+      drawMapTexture(mapTextureCtx);
     }
 
     var coal;
 
-    function drawBackground () {
+    function drawBackground (ctx) {
       ctx.fillStyle = 'rgb(100, 70, 50)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    function fillPolygon (vertices) {
+    function fillPolygon (vertices, s) {
       var vertexCount = vertices.length;
       if (!vertexCount) return;
-      var s = ctx;
       var drawScale = DRAW_SCALE;
       s.beginPath();
       s.moveTo(Math.floor(vertices[0].x * drawScale), Math.floor(vertices[0].y * drawScale));
@@ -493,28 +503,42 @@ $(function(){
       s.fill();
    }
 
-    function drawGround (ground) {
+    function drawGround (ground, ctx) {
       var position = ground.GetPosition();
       for (var fixture = ground.GetFixtureList(); fixture; fixture = fixture.GetNext()) {
         ctx.fillStyle = 'rgb(0, 0, 0)';
         ctx.save();
         var shape = fixture.GetShape();
         ctx.translate(position.x*DRAW_SCALE, position.y*DRAW_SCALE);
-        fillPolygon(shape.GetVertices());
+        fillPolygon(shape.GetVertices(), ctx);
         ctx.restore();
       }
     }
 
-    function drawWater (water) {
+    function drawWater (water, ctx) {
       var position = water.GetPosition();
       for (var fixture = water.GetFixtureList(); fixture; fixture = fixture.GetNext()) {
         ctx.fillStyle = 'rgba(100, 150, 255, 0.6)';
         ctx.save();
         var shape = fixture.GetShape();
         ctx.translate(position.x*DRAW_SCALE, position.y*DRAW_SCALE);
-        fillPolygon(shape.GetVertices());
+        fillPolygon(shape.GetVertices(), ctx);
         ctx.restore();
       }
+    }
+
+    function drawMapTexture (ctx) {
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      for (var i = 0; i < game.world.waters.length; ++i) {
+        drawWater(game.world.waters[i], ctx);
+      }
+      for (var i = 0; i < game.world.grounds.length; ++i) {
+        drawGround(game.world.grounds[i], ctx);
+      }
+    }
+
+    function copyMapTexture (ctx) {
+      ctx.drawImage(mapTexture, 0, 0);
     }
 
     var candleOn, candleOff, CANDLE_W = 30, CANDLE_H = 30;
@@ -574,6 +598,7 @@ $(function(){
       ctx.restore();
     }
 
+    var POWER_CIRCLE_OPEN = 0.06 * Math.PI;
     function drawPowerCircle (mouse) {
       var pos = game.player.body.GetPosition();
       var p = game.getPlayerVector(mouse.getPosition());
@@ -583,9 +608,17 @@ $(function(){
       var power = game.player.power;
       var powerDist = power * game.MAX_DIST;
       
-      var OPEN = 0.06 * Math.PI;
-      var fromAngle = Math.atan2(p.y, p.x) + OPEN/2;
-      var toAngle = fromAngle + 2*Math.PI - OPEN;
+
+      var fromAngle, toAngle;
+
+      if (isMobile) {
+        fromAngle = 0;
+        toAngle = 2*Math.PI;
+      }
+      else {
+        fromAngle = Math.atan2(p.y, p.x) + POWER_CIRCLE_OPEN/2;
+        toAngle = fromAngle + 2*Math.PI - POWER_CIRCLE_OPEN;
+      }
       
       var opacity = 0.3*smoothstep(0.1, 0.3, power) + 0.1 * smoothstep(0.95, 1.0, power);
 
@@ -597,27 +630,28 @@ $(function(){
       ctx.lineWidth = 5;
       ctx.arc(0, 0, powerDist*DRAW_SCALE, fromAngle, toAngle);
       ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(intensityDist*p.x*DRAW_SCALE, intensityDist*p.y*DRAW_SCALE, (intensity)*12, 0, 2*Math.PI);
-      ctx.stroke();
+
+      if (!isMobile) {
+        ctx.beginPath();
+        ctx.arc(intensityDist*p.x*DRAW_SCALE, intensityDist*p.y*DRAW_SCALE, (intensity)*12, 0, 2*Math.PI);
+        ctx.stroke();
+      }
+
       ctx.restore();
     }
 
     function render () {
       var world = game.world.world;
       ctx.save();
-      drawBackground();
+
+      drawBackground(ctx);
 
       ctx.translate(game.camera.x, game.camera.y);
 
       if (DEBUG) world.DrawDebugData();
 
-      for (var i = 0; i < game.world.waters.length; ++i) {
-        drawWater(game.world.waters[i]);
-      }
-      for (var i = 0; i < game.world.grounds.length; ++i) {
-        drawGround(game.world.grounds[i]);
-      }
+      copyMapTexture(ctx);
+
       for (var i = 0; i < game.world.candles.length; ++i) {
         drawCandle(game.world.candles[i]);
       }
@@ -759,8 +793,8 @@ var MAP_BIG = {
   var rendering = new GameRendering(game, node, loader);
 
   loader.ready(function(){
-    rendering.start();
     game.start();
+    rendering.start();
   });
 
 }());
