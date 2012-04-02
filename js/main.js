@@ -6,6 +6,7 @@
  */
 $(function(){
   var b2Vec2 = Box2D.Common.Math.b2Vec2
+  , b2Mat22 = Box2D.Common.Math.b2Mat22
   , b2AABB = Box2D.Collision.b2AABB
   , b2Math = Box2D.Common.Math.b2Math
   ,	b2BodyDef = Box2D.Dynamics.b2BodyDef
@@ -425,8 +426,19 @@ $(function(){
 
     var pe;
 
+    // TODO : replace with a custom texture image
     var mapTexture = $('<canvas width="'+game.world.width+'" height="'+game.world.height+'" />')[0];
     var mapTextureCtx = mapTexture.getContext("2d");
+    function drawMapTexture (ctx) {
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      for (var i = 0; i < game.world.waters.length; ++i) {
+        drawWater(game.world.waters[i], ctx);
+      }
+      for (var i = 0; i < game.world.grounds.length; ++i) {
+        drawGround(game.world.grounds[i], ctx);
+      }
+    }
+
 
     function setup ()  {
       if (DEBUG) {
@@ -511,16 +523,6 @@ $(function(){
       }
     }
 
-    function drawMapTexture (ctx) {
-      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-      for (var i = 0; i < game.world.waters.length; ++i) {
-        drawWater(game.world.waters[i], ctx);
-      }
-      for (var i = 0; i < game.world.grounds.length; ++i) {
-        drawGround(game.world.grounds[i], ctx);
-      }
-    }
-
     function copyMapTexture (ctx) {
       ctx.drawImage(mapTexture, 0, 0);
     }
@@ -529,10 +531,42 @@ $(function(){
 
     function drawCandle (candle) {
       var position = candle.GetPosition();
+      var x = position.x * DRAW_SCALE;
+      var y = position.y * DRAW_SCALE;
+      var w = ctx.canvas.width;
+      var h = ctx.canvas.height;
+
+      var ax = x + game.camera.x;
+      var ay = y + game.camera.y;
+
+      var visible = (function (x, y) {
+        return -CANDLE_W < x && x < w+CANDLE_W && -CANDLE_H < y && y < h+CANDLE_H;
+      }(ax, ay));
+
+      if (!visible) {
+        /*
+        var v = game.player.body.GetPosition().Copy();
+        v.Multiply(DRAW_SCALE);
+        v.Subtract(new b2Vec2(ax, ay));
+        v.NegativeSelf();
+        var dist = v.Normalize();
+        var MARGIN = 10;
+        x = w/2 + (w-MARGIN)/2 * v.x;
+        y = h/2 + (h-MARGIN)/2 * v.y;
+        var angle = Math.atan2(v.y, v.x);
+        ctx.beginPath();
+        ctx.fillStyle = 'red';
+        ctx.arc(x, y, 4, 0, 2*Math.PI);
+        ctx.fill();
+        */
+        return;
+      }
+
       for (var fixture = candle.GetFixtureList(); fixture; fixture = fixture.GetNext()) {
         ctx.save();
         var lighted = fixture.GetBody().GetUserData().lighted;
-        ctx.translate(position.x*DRAW_SCALE, position.y*DRAW_SCALE);
+        ctx.translate(x, y);
+
         if (lighted) {
           ctx.fillStyle = 'rgb(255, 200, 150)';
           ctx.drawImage(candleOn, -CANDLE_W/2, -CANDLE_W/2-(CANDLE_H-CANDLE_W), CANDLE_W, CANDLE_H);
