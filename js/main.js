@@ -158,8 +158,7 @@ $(function(){
   }
 
   // TODO
-  function TouchControls () {}
-
+  var TouchControls = MouseControls;
 
   function World (map) {
     var self = this;
@@ -568,12 +567,14 @@ $(function(){
       ctx.fill();
       ctx.restore();
 
+      // flame particle
+      // TODO : clip to space around
       ctx.save();
       ctx.globalCompositeOperation = "lighter";
 
       var now = +new Date();
       if (now >= lastEmit + 20) {
-        pe.update(1);
+        pe.update(Math.min(1/game.player.power, 10));
         lastEmit = now;
       }
       pe.position.x = p.x*DRAW_SCALE - 11;
@@ -583,7 +584,10 @@ $(function(){
       ctx.restore();
     }
 
-    var POWER_CIRCLE_OPEN = 0.06 * Math.PI;
+    var POWER_CIRCLE_OPEN = 0.05 * Math.PI;
+    var POWER_CURSOR_SIZE = 10;
+    var POWER_CIRCLE_LINEWIDTH = 5;
+    var POWER_CIRCLE_COLOR = 'rgba(100,80,60,0.5)';
     function drawPowerCircle (controls) {
       var pos = game.player.body.GetPosition();
       var mouseP = controls.getCursorPosition && controls.getCursorPosition();
@@ -605,21 +609,20 @@ $(function(){
         toAngle = 2*Math.PI;
       }
       var intensityDist = intensity * game.MAX_DIST;
-      var opacity = 0.3*smoothstep(0.1, 0.3, power) + 0.1 * smoothstep(0.95, 1.0, power);
 
       ctx.save();
+      ctx.strokeStyle = POWER_CIRCLE_COLOR;
+      ctx.fillStyle = POWER_CIRCLE_COLOR;
       ctx.translate(pos.x*DRAW_SCALE, pos.y*DRAW_SCALE);
       ctx.beginPath();
-      ctx.strokeStyle = 'rgba(50, 150, 255, '+opacity+')';
-      ctx.fillStyle = 'rgba(50, 150, 255, '+opacity+')';
-      ctx.lineWidth = 5;
-      ctx.arc(0, 0, powerDist*DRAW_SCALE, fromAngle, toAngle);
+      ctx.lineWidth = intensity * POWER_CIRCLE_LINEWIDTH;
+      ctx.arc(0, 0, intensityDist*DRAW_SCALE, fromAngle, toAngle);
       ctx.stroke();
 
       if (p) {
         ctx.beginPath();
-        ctx.arc(intensityDist*p.x*DRAW_SCALE, intensityDist*p.y*DRAW_SCALE, (intensity)*12, 0, 2*Math.PI);
-        ctx.stroke();
+        ctx.arc(intensityDist*p.x*DRAW_SCALE, intensityDist*p.y*DRAW_SCALE, intensity*POWER_CURSOR_SIZE, 0, 2*Math.PI);
+        ctx.fill();
       }
 
       ctx.restore();
@@ -640,8 +643,9 @@ $(function(){
       for (var i = 0; i < game.world.candles.length; ++i) {
         drawCandle(game.world.candles[i]);
       }
-      drawPlayer(game.player);
+
       drawPowerCircle(game.mouse);
+      drawPlayer(game.player);
 
       ctx.restore();
     }
@@ -773,7 +777,13 @@ var MAP_BIG = {
   var world = new World(MAP);
   var player = new Player(world, MAP.start.x, MAP.start.y);
   var camera = new Camera(world, player, W, H);
-  var controls = new MouseControls(node);
+  var controls;
+  if (isMobile) {
+    controls = new TouchControls(node);
+  }
+  else {
+    controls = new MouseControls(node);
+  }
   var game = new Game(world, player, camera, controls);
   var rendering = new GameRendering(game, node, loader);
 
