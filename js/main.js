@@ -141,8 +141,8 @@ $(function(){
       }
 
       return { 
-        x: (x||0)-(o.left-$(window).scrollLeft()), 
-        y: (y||0)-(o.top-$(window).scrollTop())
+        x: x-(o.left-$(window).scrollLeft()), 
+        y: y-(o.top-$(window).scrollTop())
       };
     }
 
@@ -167,7 +167,7 @@ $(function(){
     node.on(isMobile ? "touchend" : "mouseup", function (e) {
       e.preventDefault();
       pressed = false;
-      position = getCanvasPosition(e);
+      //position = getCanvasPosition(e);
       self.E.pub("end", position);
     });
 
