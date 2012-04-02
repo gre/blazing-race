@@ -139,9 +139,10 @@ $(function(){
           y = touch.pageY;
         }
       }
+
       return { 
-        x: x-(o.left-$(window).scrollLeft()), 
-        y: y-(o.top-$(window).scrollTop())
+        x: (x||0)-(o.left-$(window).scrollLeft()), 
+        y: (y||0)-(o.top-$(window).scrollTop())
       };
     }
 
@@ -575,15 +576,16 @@ $(function(){
       var pos = game.player.body.GetPosition();
       var p = game.getPlayerVector(mouse.getPosition());
       var dist = p.Normalize();
-      var intensity = game.getIntensity(dist);
-      dist = clamp(0, game.player.power*game.MAX_DIST, dist);
-      var powerDist = game.player.power * game.MAX_DIST;
+      var intensity = Math.min(game.getIntensity(dist), game.player.power);
+      var intensityDist = intensity * game.MAX_DIST;
+      var power = game.player.power;
+      var powerDist = power * game.MAX_DIST;
       
       var OPEN = 0.06 * Math.PI;
       var fromAngle = Math.atan2(p.y, p.x) + OPEN/2;
       var toAngle = fromAngle + 2*Math.PI - OPEN;
       
-      var opacity = 0.3*smoothstep(0.1, 0.3, game.player.power) + 0.1 * smoothstep(0.95, 1.0, game.player.power);
+      var opacity = 0.3*smoothstep(0.1, 0.3, power) + 0.1 * smoothstep(0.95, 1.0, power);
 
       ctx.save();
       ctx.translate(pos.x*DRAW_SCALE, pos.y*DRAW_SCALE);
@@ -594,7 +596,7 @@ $(function(){
       ctx.arc(0, 0, powerDist*DRAW_SCALE, fromAngle, toAngle);
       ctx.stroke();
       ctx.beginPath();
-      ctx.arc(dist*p.x*DRAW_SCALE, dist*p.y*DRAW_SCALE, (game.player.power)*12, 0, 2*Math.PI);
+      ctx.arc(intensityDist*p.x*DRAW_SCALE, intensityDist*p.y*DRAW_SCALE, (intensity)*12, 0, 2*Math.PI);
       ctx.stroke();
       ctx.restore();
     }
