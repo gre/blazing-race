@@ -33,7 +33,6 @@ $(function(){
 
   // Game Logic
 
-
   function GfxLoader (images, dir, ext) {
     var self = this;
     var count = 0;
@@ -79,7 +78,7 @@ $(function(){
       return new b2Vec2(self.x, self.y);
     }
 
-    self.toRealPosition = function (p) {
+    self.canvasToRealPosition = function (p) {
       return new b2Vec2(
         (-self.x + p.x)/DRAW_SCALE,
         (-self.y + p.y)/DRAW_SCALE
@@ -146,16 +145,24 @@ $(function(){
 
     self.getCursorPosition = getPosition;
 
-    node.on("mousemove", function (e) {
+    function onMouseMove (e) {
       syncCanvasPosition(e);
-    });
-    node.on("mousedown", function (e) {
+    }
+    function onMouseDown (e) {
       e.preventDefault();
       syncCanvasPosition(e);
       self.E.pub("usePower", getPosition());
-    });
+    }
 
-    self.start = function () {}
+    self.start = function () {
+      node.on("mousemove", onMouseMove);
+      node.on("mousedown", onMouseDown);
+    }
+
+    self.stop = function () {
+      node.off("mousemove", onMouseMove);
+      node.off("mousedown", onMouseDown);
+    }
   }
 
   // TODO
@@ -168,8 +175,6 @@ $(function(){
     self.height = map.height;
     self.world = new Box2D.Dynamics.b2World(new Box2D.Common.Math.b2Vec2(0, 10), true);
 
-    self.grounds = [];
-    self.waters = [];
     self.candles = [];
 
     self.E = BlazingRace.util.makeEvent({});
@@ -193,22 +198,18 @@ $(function(){
       fixDef.shape.SetAsBox(self.width / DRAW_SCALE, BORDER);
 
       bodyDef.position.Set(0, self.height / DRAW_SCALE);
-      (body=world.CreateBody(bodyDef)).CreateFixture(fixDef);
-      self.grounds.push(body);
+      world.CreateBody(bodyDef).CreateFixture(fixDef);
 
       bodyDef.position.Set(0, 0);
-      (body=world.CreateBody(bodyDef)).CreateFixture(fixDef);
-      self.grounds.push(body);
+      world.CreateBody(bodyDef).CreateFixture(fixDef);
 
       fixDef.shape.SetAsBox(BORDER, self.height / DRAW_SCALE);
       
       bodyDef.position.Set(0, 0);
-      (body=world.CreateBody(bodyDef)).CreateFixture(fixDef);
-      self.grounds.push(body);
+      world.CreateBody(bodyDef).CreateFixture(fixDef);
 
       bodyDef.position.Set(self.width / DRAW_SCALE, 0);
-      (body=world.CreateBody(bodyDef)).CreateFixture(fixDef);
-      self.grounds.push(body);
+      world.CreateBody(bodyDef).CreateFixture(fixDef);
     }
 
     function asArray (raw) {
@@ -220,7 +221,7 @@ $(function(){
     }
 
     function init (world) {
-      initBounds(world, 20/DRAW_SCALE);
+      initBounds(world, 1/DRAW_SCALE);
       var fixDef = new b2FixtureDef;
       fixDef.density = groundFixDef.density;
       fixDef.friction = groundFixDef.friction;
@@ -239,7 +240,6 @@ $(function(){
             var ground = world.CreateBody(bodyDef);
             ground.CreateFixture(fixDef);
             ground.SetUserData({ type: "ground" });
-            self.grounds.push(ground);
           }
         }
         if (type == "candles") {
@@ -262,7 +262,6 @@ $(function(){
             var water = world.CreateBody(bodyDef);
             water.SetUserData({ type: "water" });
             water.CreateFixture(fixDef);
-            self.waters.push(water);
           }
         }
       }
@@ -304,6 +303,9 @@ $(function(){
     var self = this;
     self.size = 0.5;
     self.body = world.createPlayerBody(self.size, _x/DRAW_SCALE, _y/DRAW_SCALE);
+    self.E = BlazingRace.util.makeEvent({});
+
+    self.rez = self.body.GetPosition().Copy();
 
     var POWER_FORCE = 15;
     var POWER_LOAD_SPEED = 4000;
@@ -321,11 +323,36 @@ $(function(){
       }
     });
 
+    self.getPosition = function () {
+      return self.body.GetPosition();
+    }
+
     self.start = function () {
+      self.ignition();
     }
 
     self.isDead = function () {
       return self.oxygen <= 0;
+    }
+
+    self.die = function () {
+      self.oxygen = 0;
+      self.E.pub("die");
+    }
+
+    self.ignition = function () {
+      self.oxygen = 1;
+      self.E.pub("live");
+    }
+
+    self.reignition = function () {
+      self.oxygen = 1;
+      self.body.SetPosition(self.rez);
+      self.E.pub("live");
+    }
+
+    self.saveRezPoint = function () {
+      self.rez = self.body.GetPosition().Copy();
     }
 
     self.consumePower = function (intensity) {
@@ -337,24 +364,27 @@ $(function(){
     }
   }
 
-  function Game (world, player, camera, mouse) {
+  function Game (world, player, camera, controls) {
     var self = this;
+    
+    self.E = BlazingRace.util.makeEvent({});
+      
     self.world = world;
     self.player = player;
     self.camera = camera;
-    self.mouse = mouse;
+    self.controls = controls;
 
     self.startTime = 0;
     self.candleCount = 0;
 
+
     self.getPlayerVector = function (p) {
-      var click = camera.toRealPosition(p);
+      var click = camera.canvasToRealPosition(p);
       var position = player.body.GetPosition();
       var force = click.Copy();
       force.Subtract(position);
       return force;
     }
-
 
     self.MAX_DIST = 5;
 
@@ -362,8 +392,7 @@ $(function(){
       return smoothstep(0, self.MAX_DIST, dist);
     }
 
-
-    mouse.E.sub("usePower", function (canvasPosition) {
+    controls.E.sub("usePower", function (canvasPosition) {
       var position = player.body.GetPosition();
       var force = self.getPlayerVector(canvasPosition);
       var dist = force.Normalize();
@@ -374,6 +403,14 @@ $(function(){
       player.body.ApplyImpulse(force, position);
     });
 
+    self.E.sub("lightCandle", function (candle) {
+      player.saveRezPoint();
+    });
+
+    function stop() {
+
+    }
+
     function start() {
       self.startTime = +new Date();
       var contactListener = new b2ContactListener;
@@ -381,14 +418,17 @@ $(function(){
         var aData = contact.GetFixtureA().GetBody().GetUserData();
         var bData = contact.GetFixtureB().GetBody().GetUserData();
         if (aData && bData) {
-          if (aData.type=="water" && bData.type=="player") {
-            player.oxygen = 0;
+          if (aData.type=="water" && bData.type=="player" && player.oxygen>0) {
+            player.die();
+            self.E.pub("collideWater");
           }
           else if (aData.type=="candle" && bData.type=="player") {
             if (player.oxygen && !aData.lighted) {
               aData.lighted = true;
-              contact.GetFixtureA().GetBody().SetUserData(aData);
+              var candle = contact.GetFixtureA().GetBody();
+              candle.SetUserData(aData);
               ++ self.candleCount;
+              self.E.pub("lightCandle", { body: candle });
             }
           }
         }
@@ -409,11 +449,12 @@ $(function(){
     }
 
     self.start = function () {
-      self.world.start();
-      self.player.start();
-      self.camera.start();
-      self.mouse.start();
+      controls.start();
       start();
+    }
+    self.stop = function () {
+      controls.stop();
+      stop();
     }
   }
 
@@ -440,17 +481,7 @@ $(function(){
     }
 
 
-    function setup ()  {
-      if (DEBUG) {
-        var debugDraw = new Box2D.Dynamics.b2DebugDraw();
-        debugDraw.SetSprite(ctx);
-        debugDraw.SetDrawScale(DRAW_SCALE);
-        debugDraw.SetFillAlpha(0.5);
-        debugDraw.SetLineThickness(1.0);
-        debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit);
-        game.world.world.SetDebugDraw(debugDraw);
-      }
-
+    function initParticles () {
       pe = new cParticleEmitter();
       pe.maxParticles = 250;
       pe.size = DRAW_SCALE*0.6;
@@ -464,6 +495,27 @@ $(function(){
       pe.position.x = -1000;
       pe.position.y = -1000;
 		  pe.init();
+    }
+
+    function setup ()  {
+      if (DEBUG) {
+        var debugDraw = new Box2D.Dynamics.b2DebugDraw();
+        debugDraw.SetSprite(ctx);
+        debugDraw.SetDrawScale(DRAW_SCALE);
+        debugDraw.SetFillAlpha(0.5);
+        debugDraw.SetLineThickness(1.0);
+        debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit);
+        game.world.world.SetDebugDraw(debugDraw);
+      }
+
+      initParticles();
+
+      game.player.E.sub("die", function () {
+        pe.duration = -1;
+      });
+      game.player.E.sub("live", function () {
+        initParticles();
+      });
 
       cacheMapTexture();
     }
@@ -479,10 +531,9 @@ $(function(){
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    function fillPolygon (vertices, s) {
+    function fillPolygon (vertices, s, drawScale) {
       var vertexCount = vertices.length;
       if (!vertexCount) return;
-      var drawScale = DRAW_SCALE;
       s.beginPath();
       s.moveTo(Math.floor(vertices[0].x * drawScale), Math.floor(vertices[0].y * drawScale));
       for (var i = 1; i < vertexCount; i++) {
@@ -499,27 +550,25 @@ $(function(){
       s.fill();
    }
 
-    function drawGround (ground, ctx) {
-      var position = ground.GetPosition();
-      for (var fixture = ground.GetFixtureList(); fixture; fixture = fixture.GetNext()) {
-        ctx.fillStyle = 'rgb(0, 0, 0)';
-        ctx.save();
-        var shape = fixture.GetShape();
-        ctx.translate(position.x*DRAW_SCALE, position.y*DRAW_SCALE);
-        fillPolygon(shape.GetVertices(), ctx);
-        ctx.restore();
-      }
+    function rawToPositions (arr) {
+      var a = [];
+      for (var i = 0; i < arr.length/2; ++ i)
+        a.push({ x: arr[i*2], y: arr[i*2+1] });
+      return a;
     }
 
-    function drawWater (water, ctx) {
-      var position = water.GetPosition();
-      for (var fixture = water.GetFixtureList(); fixture; fixture = fixture.GetNext()) {
-        ctx.fillStyle = 'rgba(100, 150, 255, 0.6)';
-        ctx.save();
-        var shape = fixture.GetShape();
-        ctx.translate(position.x*DRAW_SCALE, position.y*DRAW_SCALE);
-        fillPolygon(shape.GetVertices(), ctx);
-        ctx.restore();
+    function drawMapTexture (ctx) {
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      var waters = game.world.map.objects.waters;
+      ctx.fillStyle = 'rgba(100, 150, 255, 0.6)';
+      for (var i = 0; i < waters.length; ++i) {
+        fillPolygon(rawToPositions(waters[i]), ctx, 1);
+      }
+
+      var grounds = game.world.map.objects.grounds;
+      ctx.fillStyle = 'rgb(0, 0, 0)';
+      for (var i = 0; i < grounds.length; ++i) {
+        fillPolygon(rawToPositions(grounds[i]), ctx, 1);
       }
     }
 
@@ -531,6 +580,8 @@ $(function(){
 
     function drawCandle (candle) {
       var position = candle.GetPosition();
+      var fixture = candle.GetFixtureList();
+      var lighted = fixture.GetBody().GetUserData().lighted;
       var x = position.x * DRAW_SCALE;
       var y = position.y * DRAW_SCALE;
       var w = ctx.canvas.width;
@@ -540,33 +591,40 @@ $(function(){
       var ay = y + game.camera.y;
 
       var visible = (function (x, y) {
-        return -CANDLE_W < x && x < w+CANDLE_W && -CANDLE_H < y && y < h+CANDLE_H;
+        return -CANDLE_W/2 < x && x < w+CANDLE_W/2 && -CANDLE_H/2 < y && y < h+CANDLE_H/2;
       }(ax, ay));
 
-      if (!visible) {
-        /*
-        var v = game.player.body.GetPosition().Copy();
-        v.Multiply(DRAW_SCALE);
-        v.Subtract(new b2Vec2(ax, ay));
-        v.NegativeSelf();
+      if (!visible && !lighted) {
+        return; // TODO
+
+        var v = position.Copy();
+        var playerPosition = game.player.getPosition();
+        v.Subtract(playerPosition);
         var dist = v.Normalize();
         var MARGIN = 10;
-        x = w/2 + (w-MARGIN)/2 * v.x;
-        y = h/2 + (h-MARGIN)/2 * v.y;
+        // FIXME w/2 and h/2 is wrong
+        // FIXME this is not enough to find the x, y in the border
+        var playerPositionScale = playerPosition.Copy();
+        playerPositionScale.Multiply(DRAW_SCALE);
+
+        var s = new b2Vec2(w/2, h/2);
+        s.Subtract(game.camera.getPosition());
+        s.Subtract(playerPositionScale);
+        s.NegativeSelf();
+
+        var px = s.x + w/2 + (w-2*MARGIN)/2 * v.x - game.camera.x;
+        var py = s.y + h/2 + (h-2*MARGIN)/2 * v.y - game.camera.y;
+
         var angle = Math.atan2(v.y, v.x);
         ctx.beginPath();
         ctx.fillStyle = 'red';
-        ctx.arc(x, y, 4, 0, 2*Math.PI);
+        ctx.arc(px, py, 4, 0, 2*Math.PI);
         ctx.fill();
-        */
-        return;
       }
 
-      for (var fixture = candle.GetFixtureList(); fixture; fixture = fixture.GetNext()) {
+      if (visible) {
         ctx.save();
-        var lighted = fixture.GetBody().GetUserData().lighted;
         ctx.translate(x, y);
-
         if (lighted) {
           ctx.fillStyle = 'rgb(255, 200, 150)';
           ctx.drawImage(candleOn, -CANDLE_W/2, -CANDLE_W/2-(CANDLE_H-CANDLE_W), CANDLE_W, CANDLE_H);
@@ -678,7 +736,7 @@ $(function(){
         drawCandle(game.world.candles[i]);
       }
 
-      drawPowerCircle(game.mouse);
+      drawPowerCircle(game.controls);
       drawPlayer(game.player);
 
       ctx.restore();
@@ -687,41 +745,88 @@ $(function(){
     var lastSeconds, lastMinutes;
     var $seconds = node.find(".chrono .seconds");
     var $minutes = node.find(".chrono .minutes");
+    var countdownTime = +new Date();
+    var countdownRunning = false;
     var ended = false;
+    var COUNTDOWN_DURATION = 3000;
     function DOM_render () {
       if (ended) return;
-      var duration = +new Date() - game.startTime;
-      var seconds = Math.floor(duration / 1000) % 60;
-      var minutes = Math.floor(duration / 60000) % 60;
-      if (seconds != lastSeconds) {
-        $seconds.text(seconds<=9 ? "0"+seconds : seconds);
-        lastSeconds = seconds;
-      }
-      if (minutes != lastMinutes) {
-        $minutes.text(minutes);
-        lastMinutes = minutes;
-      }
-
-      var state = game.checkGameState();
-      if (state) {
-        ended = true;
-        if (state>0) {
-          win();
+      var duration = +new Date() - countdownTime - COUNTDOWN_DURATION;
+      if (duration < 0) {
+        if (!countdownRunning) {
+          countdownRunning = true;
         }
-        else {
-          lose();
+        countdown( -duration );
+      }
+      else {
+        if (countdownRunning) {
+          if (game.checkGameState() == -1) {
+            game.player.reignition();
+          }
+          countdown(-1);  
+          game.start();
+          countdownRunning = false;
+        }
+        duration = +new Date() - game.startTime;
+        var seconds = Math.floor(duration / 1000) % 60;
+        var minutes = Math.floor(duration / 60000) % 60;
+        if (seconds != lastSeconds) {
+          $seconds.text(seconds<=9 ? "0"+seconds : seconds);
+          lastSeconds = seconds;
+        }
+        if (minutes != lastMinutes) {
+          $minutes.text(minutes);
+          lastMinutes = minutes;
+        }
+
+        var state = game.checkGameState();
+        if (state) {
+          if (state>0) {
+            ended = true;
+            win();
+          }
+          else {
+            neverDead = false;
+            lose();
+          }
         }
       }
     }
 
-    var $end = node.find(".end");
+    var $end = node.find(".front");
+
+    var currentCount = null;
+    function countdown(ms) {
+      var seconds = Math.ceil(ms/1000);
+      if (seconds === currentCount) {
+        return;
+      }
+      currentCount = seconds;
+      if (seconds>0) {
+        $end.fadeIn();
+        $end.find(".countdown").remove();
+        $end.append('<div class="countdown">'+seconds+'</div>');
+        setTimeout(function(){
+          $end.find(".countdown").addClass("change");
+        }, 100);
+      }
+      else if (seconds<=0) {
+        $end.find(".message").empty();
+        $end.hide();
+      }
+    }
 
     function win() {
       $end.fadeIn().find(".message").text("All candles are lighted! You succeed!");
+      game.stop();
     }
 
     function lose() {
-      $end.fadeIn().find(".message").text("You haven't kept the flame lighted!");
+      game.stop();
+      setTimeout(function(){
+        $end.fadeIn().find(".message").text("Reignition...");
+        countdownTime = +new Date();
+      }, 500);
     }
 
     this.start = function () {
@@ -822,9 +927,13 @@ var MAP_BIG = {
   var rendering = new GameRendering(game, node, loader);
 
   loader.ready(function(){
-    game.start();
+    world.start();
+    player.start();
+    camera.start();
     rendering.start();
   });
+
+  BlazingRace.game = game;
 
 }());
 

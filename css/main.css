@@ -38,7 +38,7 @@ a:hover {
   z-index: 15;
 }
 
-#game .end {
+#game .front {
   position: absolute;
   top: 0;
   left: 0;
@@ -47,7 +47,7 @@ a:hover {
   z-index: 10;
   background: rgba(0,0,0,0.4);
 }
-#game .end .message {
+#game .front * {
   color: white;
   font-weight: bold;
   font-size: 2em;
@@ -55,4 +55,16 @@ a:hover {
   position: relative;
   display: block;
   top: 40%;
+}
+#game .countdown {
+  font-weight: bold;
+  font-size: 6em;
+  transition: 800ms;
+  -moz-transition: 800ms;
+  transform: scale(1);
+  -moz-transform: scale(1);
+}
+#game .countdown.change {
+  transform: scale(0.7);
+  -moz-transform: scale(0.7);
 }
