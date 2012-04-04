@@ -9,8 +9,11 @@ $(function(){
   , b2Mat22 = Box2D.Common.Math.b2Mat22
   , b2AABB = Box2D.Collision.b2AABB
   , b2Math = Box2D.Common.Math.b2Math
+  , b2Transform = Box2D.Common.Math.b2Transform
   ,	b2BodyDef = Box2D.Dynamics.b2BodyDef
   ,	b2Body = Box2D.Dynamics.b2Body
+  ,	b2Collision = Box2D.Collision.b2Collision
+  , b2Manifold = Box2D.Collision.b2Manifold
   ,	b2FixtureDef = Box2D.Dynamics.b2FixtureDef
   ,	b2Fixture = Box2D.Dynamics.b2Fixture
   ,	b2World = Box2D.Dynamics.b2World
@@ -71,6 +74,8 @@ $(function(){
     // non normalized position
     self.x = 0;
     self.y = 0;
+    self.width = width;
+    self.height = height;
 
     self.E = BlazingRace.util.makeEvent({});
 
@@ -91,24 +96,24 @@ $(function(){
     self.move = function () {
       var x, y;
       var v = player.body.GetPosition();
-      if (world.width > width) {
-        if (v.x*DRAW_SCALE < (world.width - width/2) && v.x*DRAW_SCALE > width/2) {
-          x = -(v.x*DRAW_SCALE)+(width/2);
+      if (world.width > self.width) {
+        if (v.x*DRAW_SCALE < (world.width - self.width/2) && v.x*DRAW_SCALE > self.width/2) {
+          x = -(v.x*DRAW_SCALE)+(self.width/2);
         }
-        else if(v.x*DRAW_SCALE >= (world.width-width/2)) {
-          x = width-world.width;
+        else if(v.x*DRAW_SCALE >= (world.width-self.width/2)) {
+          x = self.width-world.width;
         }
         else {
           x = 0;
         }
         self.x = x;
       }
-      if(world.height > height) {
-				if(v.y*DRAW_SCALE < (world.height - height/2) && v.y*DRAW_SCALE > height/2) {
-					y = -(v.y*DRAW_SCALE)+(height/2);
+      if(world.height > self.height) {
+				if(v.y*DRAW_SCALE < (world.height - self.height/2) && v.y*DRAW_SCALE > self.height/2) {
+					y = -(v.y*DRAW_SCALE)+(self.height/2);
 				}
-				else if(v.y*DRAW_SCALE >= (world.height - height/2)) {
-					y = (height - world.height);
+				else if(v.y*DRAW_SCALE >= (world.height - self.height/2)) {
+					y = (self.height - world.height);
 				}
 				else {
 					y = 0;
@@ -460,9 +465,11 @@ $(function(){
 
   // Game Render
 
-  function GameRendering (game, node, loader) {
+  function GameRendering (game, W, H, node, loader) {
 
     var canvas = node.find("canvas.game")[0];
+    canvas.width = W;
+    canvas.height = H;
     var ctx = canvas.getContext("2d");
 
     var pe;
@@ -595,14 +602,12 @@ $(function(){
       }(ax, ay));
 
       if (!visible && !lighted) {
-        return; // TODO
-
+        var p = new b2Vec2(0, 0);
         var v = position.Copy();
         var playerPosition = game.player.getPosition();
         v.Subtract(playerPosition);
         var dist = v.Normalize();
         var MARGIN = 10;
-        // FIXME w/2 and h/2 is wrong
         // FIXME this is not enough to find the x, y in the border
         var playerPositionScale = playerPosition.Copy();
         playerPositionScale.Multiply(DRAW_SCALE);
@@ -612,13 +617,64 @@ $(function(){
         s.Subtract(playerPositionScale);
         s.NegativeSelf();
 
+        var camera = game.camera;
+
         var px = s.x + w/2 + (w-2*MARGIN)/2 * v.x - game.camera.x;
         var py = s.y + h/2 + (h-2*MARGIN)/2 * v.y - game.camera.y;
+        var p = new b2Vec2(px, py);
+        
 
-        var angle = Math.atan2(v.y, v.x);
+        /*
+        var a = [];
+        var b = [new b2Vec2(0, camera.height), new b2Vec2(camera];
+        b2Collision.ClipSegmentToLine(a, b, new b2Vec2(px, py));
+        console.log(a);
+        */
+        /*
+
+        var manifold = new b2Manifold();
+        var polyA = new b2PolygonShape();
+        var polyB = new b2PolygonShape();
+        var xfA = new b2Transform();
+        var xfB = new b2Transform();
+
+        polyA.SetAsOrientedBox(camera.width/2, 20, new b2Vec2(w/2-camera.x, h-camera.y));
+        polyB.SetAsEdge(
+          new b2Vec2(s.x + w/2, s.y + h/2),
+          new b2Vec2(
+            s.x + w/2 + w * v.x - game.camera.x, 
+            s.y + h/2 + h * v.y - game.camera.y
+          )
+        );
+
+        b2Collision.CollidePolygons(manifold, polyA, xfA, polyB, xfB);
+
+        var p = manifold.m_localPoint.Copy();
+        p.Add(game.camera.getPosition());
+        */
+
+        //b2Math.ClampV(p, new b2Vec2(10, 10), new b2Vec2(w-10, h-10));
+
+        /*
+        var p = manifold.m_points[0].m_localPoint.Copy();
+        p.Subtract(camera.getPosition());
+        */
+
+        /*
+        if (!window.LASTDEBUG) LASTDEBUG = 0;
+        if (LASTDEBUG+5000 < +new Date()) {
+          LASTDEBUG=+new Date()
+          console.log(polyA, polyB);
+          console.log(manifold);
+          console.log(px, py, p.x, p.y);
+        }
+        */
+
+        //var angle = Math.atan2(v.y, v.x);
+        
         ctx.beginPath();
-        ctx.fillStyle = 'red';
-        ctx.arc(px, py, 4, 0, 2*Math.PI);
+        ctx.fillStyle = 'rgba(255, 255, 0, 0.8)';
+        ctx.arc(p.x, p.y, 5, 0, 2*Math.PI);
         ctx.fill();
       }
 
@@ -812,6 +868,7 @@ $(function(){
       }
       else if (seconds<=0) {
         $end.find(".message").empty();
+        $end.find(".countdown").empty();
         $end.hide();
       }
     }
@@ -905,8 +962,8 @@ var MAP_BIG = {
   var MAP = MAP_BIG;
 
   var node = $("#game");
-  var W = 800;
-  var H = 600;
+  var W = node.width();
+  var H = node.height();
 
   var loader = new GfxLoader([
     "coal",
@@ -924,7 +981,7 @@ var MAP_BIG = {
     controls = new MouseControls(node);
   }
   var game = new Game(world, player, camera, controls);
-  var rendering = new GameRendering(game, node, loader);
+  var rendering = new GameRendering(game, W, H, node, loader);
 
   loader.ready(function(){
     world.start();

@@ -19,12 +19,9 @@ a:hover {
 }
 
 #wrapper {
-  width: 800px;
   margin: 10px auto;
 }
 #game {
-  width: 800px;
-  height: 600px;
   background: #fff;
   position: relative;
 }
