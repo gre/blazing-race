@@ -17,6 +17,16 @@ a {
 a:hover {
   color: #e71;
 }
+#game * {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0); 
+  -moz-user-select: -moz-none; 
+  -khtml-user-select: none; 
+  -webkit-user-select: none; 
+  -o-user-select: none; 
+  user-select: none; 
+}
+
+
 
 #wrapper {
   margin: 10px auto;
@@ -43,6 +53,7 @@ a:hover {
   height: 100%;
   z-index: 10;
   background: rgba(0,0,0,0.4);
+  text-shadow: 1px 1px 3px rgba(0,0,0,1);
 }
 #game .front * {
   color: white;

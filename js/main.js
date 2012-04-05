@@ -169,6 +169,8 @@ $(function(){
     var position = { x: 0, y: 0 };
     self.E = BlazingRace.util.makeEvent({});
 
+    var started = false;
+
     function syncCanvasPosition (e) {
       var o = node.offset();
       var x = e.clientX;
@@ -196,12 +198,18 @@ $(function(){
       self.E.pub("usePower", getPosition());
     }
 
+    self.isActive = function () {
+      return started;
+    }
+
     self.start = function () {
+      started = true;
       node.on("mousemove", onMouseMove);
       node.on("mousedown", onMouseDown);
     }
 
     self.stop = function () {
+      started = false;
       node.off("mousemove", onMouseMove);
       node.off("mousedown", onMouseDown);
     }
@@ -784,7 +792,8 @@ $(function(){
         drawCandle(game.world.candles[i]);
       }
 
-      drawPowerCircle(game.controls);
+      if (game.controls.isActive())
+        drawPowerCircle(game.controls);
       drawPlayer(game.player);
 
       ctx.restore();
