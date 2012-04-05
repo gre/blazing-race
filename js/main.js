@@ -90,6 +90,43 @@ $(function(){
       )
     }
 
+    // Return the projected point of the point o with the vector v
+    // to the camera bound with a given padding.
+    self.projectOnBounds = function (o, v, padding) {
+      var W = self.width, H = self.height;
+      o = o.Copy();
+      o.Multiply(DRAW_SCALE);
+      o.Add(self.getPosition());
+      if (!padding) padding = 0;
+      var x, y, k;
+
+      // Try to project on left and right sides
+      for (var i=0; i<=1; ++i) {
+        var x = W*i;
+        k = (x-o.x)/v.x;
+        y = o.y + k*v.y;
+        if ( k > 0 && 0 <= y && y <= H ) {
+          return new b2Vec2(
+            x + (!y ? padding : -padding), 
+            y + (!y ? padding : -padding)
+          );
+        }
+      }
+
+      // Try to project on top and bottom sides
+      for (var i=0; i<=1; ++i) {
+        var y = H*i;
+        k = (y-o.y)/v.y;
+        x = o.x + k*v.x;
+        if ( k > 0 && 0 <= x && x <= W ) {
+          return new b2Vec2(
+            x + (!x ? padding : -padding), 
+            y + (!y ? padding : -padding)
+          );
+        }
+      }
+    }
+
     self.start = function () {
     }
 
@@ -585,6 +622,34 @@ $(function(){
 
     var candleOn, candleOff, CANDLE_W = 30, CANDLE_H = 30;
 
+    function drawCandleIndicator (candle) {
+      var playerPosition = game.player.getPosition();
+      var v = candle.GetPosition().Copy();
+      v.Subtract(playerPosition);
+      var dist = v.Normalize();
+      var mindist = new b2Vec2(game.world.width, game.world.height).Normalize()/DRAW_SCALE;
+      var size = 30*(1-1.5*smoothstep(0, mindist, dist));
+
+      if (size > 0) {
+        var p = game.camera.projectOnBounds(playerPosition, v, size+5);
+        p.Subtract(game.camera.getPosition());
+
+        ctx.save();
+        ctx.translate(p.x, p.y);
+
+        ctx.rotate(Math.atan2(v.y, v.x));
+
+        ctx.fillStyle = 'rgba(240, 210, 100, 0.8)';
+        ctx.beginPath();
+        ctx.moveTo(0, -size/4);
+        ctx.lineTo(0, size/4);
+        ctx.lineTo(size, 0);
+        ctx.fill();
+
+        ctx.restore();
+      }
+    }
+
     function drawCandle (candle) {
       var position = candle.GetPosition();
       var fixture = candle.GetFixtureList();
@@ -602,80 +667,7 @@ $(function(){
       }(ax, ay));
 
       if (!visible && !lighted) {
-        var p = new b2Vec2(0, 0);
-        var v = position.Copy();
-        var playerPosition = game.player.getPosition();
-        v.Subtract(playerPosition);
-        var dist = v.Normalize();
-        var MARGIN = 10;
-        // FIXME this is not enough to find the x, y in the border
-        var playerPositionScale = playerPosition.Copy();
-        playerPositionScale.Multiply(DRAW_SCALE);
-
-        var s = new b2Vec2(w/2, h/2);
-        s.Subtract(game.camera.getPosition());
-        s.Subtract(playerPositionScale);
-        s.NegativeSelf();
-
-        var camera = game.camera;
-
-        var px = s.x + w/2 + (w-2*MARGIN)/2 * v.x - game.camera.x;
-        var py = s.y + h/2 + (h-2*MARGIN)/2 * v.y - game.camera.y;
-        var p = new b2Vec2(px, py);
-        
-
-        /*
-        var a = [];
-        var b = [new b2Vec2(0, camera.height), new b2Vec2(camera];
-        b2Collision.ClipSegmentToLine(a, b, new b2Vec2(px, py));
-        console.log(a);
-        */
-        /*
-
-        var manifold = new b2Manifold();
-        var polyA = new b2PolygonShape();
-        var polyB = new b2PolygonShape();
-        var xfA = new b2Transform();
-        var xfB = new b2Transform();
-
-        polyA.SetAsOrientedBox(camera.width/2, 20, new b2Vec2(w/2-camera.x, h-camera.y));
-        polyB.SetAsEdge(
-          new b2Vec2(s.x + w/2, s.y + h/2),
-          new b2Vec2(
-            s.x + w/2 + w * v.x - game.camera.x, 
-            s.y + h/2 + h * v.y - game.camera.y
-          )
-        );
-
-        b2Collision.CollidePolygons(manifold, polyA, xfA, polyB, xfB);
-
-        var p = manifold.m_localPoint.Copy();
-        p.Add(game.camera.getPosition());
-        */
-
-        //b2Math.ClampV(p, new b2Vec2(10, 10), new b2Vec2(w-10, h-10));
-
-        /*
-        var p = manifold.m_points[0].m_localPoint.Copy();
-        p.Subtract(camera.getPosition());
-        */
-
-        /*
-        if (!window.LASTDEBUG) LASTDEBUG = 0;
-        if (LASTDEBUG+5000 < +new Date()) {
-          LASTDEBUG=+new Date()
-          console.log(polyA, polyB);
-          console.log(manifold);
-          console.log(px, py, p.x, p.y);
-        }
-        */
-
-        //var angle = Math.atan2(v.y, v.x);
-        
-        ctx.beginPath();
-        ctx.fillStyle = 'rgba(255, 255, 0, 0.8)';
-        ctx.arc(p.x, p.y, 5, 0, 2*Math.PI);
-        ctx.fill();
+        drawCandleIndicator(candle);
       }
 
       if (visible) {
