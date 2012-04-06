@@ -29,34 +29,6 @@
     groundFixDef.friction = 0.5;
     groundFixDef.restitution = 0.1;
 
-
-    function initBounds (world, BORDER) {
-      var fixDef = new b2FixtureDef;
-      fixDef.density = groundFixDef.density;
-      fixDef.friction = groundFixDef.friction;
-      fixDef.restitution = groundFixDef.restitution;
-      var bodyDef = new b2BodyDef;
-
-      //create ground
-      bodyDef.type = b2Body.b2_staticBody;
-      fixDef.shape = new b2PolygonShape;
-      fixDef.shape.SetAsBox(self.width / DRAW_SCALE, BORDER);
-
-      bodyDef.position.Set(0, self.height / DRAW_SCALE);
-      world.CreateBody(bodyDef).CreateFixture(fixDef);
-
-      bodyDef.position.Set(0, 0);
-      world.CreateBody(bodyDef).CreateFixture(fixDef);
-
-      fixDef.shape.SetAsBox(BORDER, self.height / DRAW_SCALE);
-      
-      bodyDef.position.Set(0, 0);
-      world.CreateBody(bodyDef).CreateFixture(fixDef);
-
-      bodyDef.position.Set(self.width / DRAW_SCALE, 0);
-      world.CreateBody(bodyDef).CreateFixture(fixDef);
-    }
-
     function asArray (raw) {
       var arr = [];
       for (var j = 0; j<raw.length/2; ++j) {
@@ -66,7 +38,6 @@
     }
 
     function init (world) {
-      initBounds(world, 1/DRAW_SCALE);
       var fixDef = new b2FixtureDef;
       fixDef.density = groundFixDef.density;
       fixDef.friction = groundFixDef.friction;

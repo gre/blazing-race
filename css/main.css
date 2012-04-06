@@ -3,12 +3,13 @@ html {
 }
 body {
   background: #eee;
+  margin: 0;
+  padding: 0;
 }
 footer {
   margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid white;
   text-align: center;
+  white-space: nowrap;
 }
 
 a {
@@ -29,7 +30,7 @@ a:hover {
 
 
 #wrapper {
-  margin: 10px auto;
+  margin: 0px auto;
 }
 #game {
   background: #fff;

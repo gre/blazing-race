@@ -67,8 +67,8 @@ $(function(){
 
     var lastWidth, lastHeight;
     $(window).resize(function () {
-      var w = Math.max(250, $(window).width()-30);
-      var h = Math.max(200, $(window).height()-60);
+      var w = Math.max(250, $(window).width()-1);
+      var h = Math.max(200, $(window).height()-30);
       if (w !== lastWidth || h !== lastHeight) {
         node.width(w).height(h);
         camera.resize(w, h);
