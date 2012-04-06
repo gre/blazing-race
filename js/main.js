@@ -62,7 +62,6 @@ $(function(){
     loader.ready(function(){
       world.start();
       player.start();
-      camera.start();
       rendering.start();
     });
 

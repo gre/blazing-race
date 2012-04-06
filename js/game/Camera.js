@@ -62,12 +62,9 @@
       }
     }
 
-    self.start = function () {
-    }
-
-    self.focusOn = function (position) {
+    // Move the camera centered to the position v
+    self.focusOn = function (v) {
       var x, y;
-      var v = position;
       if (world.width > self.width) {
         if (v.x*DRAW_SCALE < (world.width - self.width/2) && v.x*DRAW_SCALE > self.width/2) {
           x = -(v.x*DRAW_SCALE)+(self.width/2);
@@ -81,17 +78,17 @@
         self.x = x;
       }
       if(world.height > self.height) {
-				if(v.y*DRAW_SCALE < (world.height - self.height/2) && v.y*DRAW_SCALE > self.height/2) {
-					y = -(v.y*DRAW_SCALE)+(self.height/2);
-				}
-				else if(v.y*DRAW_SCALE >= (world.height - self.height/2)) {
-					y = (self.height - world.height);
-				}
-				else {
-					y = 0;
-				}
+        if(v.y*DRAW_SCALE < (world.height - self.height/2) && v.y*DRAW_SCALE > self.height/2) {
+          y = -(v.y*DRAW_SCALE)+(self.height/2);
+        }
+        else if(v.y*DRAW_SCALE >= (world.height - self.height/2)) {
+          y = (self.height - world.height);
+        }
+        else {
+          y = 0;
+        }
         self.y = y;
-			}
+      }
     }
   }
 
