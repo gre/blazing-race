@@ -67,8 +67,8 @@ $(function(){
 
     var lastWidth, lastHeight;
     $(window).resize(function () {
-      var w = Math.max(400, $(window).width()-30);
-      var h = Math.max(300, $(window).height()-60);
+      var w = Math.max(250, $(window).width()-30);
+      var h = Math.max(200, $(window).height()-60);
       if (w !== lastWidth || h !== lastHeight) {
         node.width(w).height(h);
         rendering.resize(w, h);
