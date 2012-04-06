@@ -10,22 +10,27 @@
     canvas.height = H;
     var ctx = canvas.getContext("2d");
 
+    var _initDebug = false;
+    function initDebug () {
+      _initDebug = true;
+      var debugDraw = new Box2D.Dynamics.b2DebugDraw();
+      debugDraw.SetSprite(ctx);
+      debugDraw.SetDrawScale(DRAW_SCALE);
+      debugDraw.SetFillAlpha(0.5);
+      debugDraw.SetLineThickness(1.0);
+      debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit);
+      game.world.world.SetDebugDraw(debugDraw);
+    }
+
     function setup ()  {
-      if (ns.DEBUG) {
-        var debugDraw = new Box2D.Dynamics.b2DebugDraw();
-        debugDraw.SetSprite(ctx);
-        debugDraw.SetDrawScale(DRAW_SCALE);
-        debugDraw.SetFillAlpha(0.5);
-        debugDraw.SetLineThickness(1.0);
-        debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit);
-        game.world.world.SetDebugDraw(debugDraw);
-      }
+      if (ns.DEBUG) initDebug();
       game.setup(loader);
     }
 
     function render () {
       ctx.save();
       if (ns.DEBUG) {
+        if (!_initDebug) initDebug();
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         ctx.translate(game.camera.x, game.camera.y);
         game.world.world.DrawDebugData();
