@@ -1,6 +1,8 @@
 (function(ns){
 
-  var makeEvent = BlazingRace.util.makeEvent;
+  var makeEvent = BlazingRace.util.makeEvent
+  , clamp = BlazingRace.util.clamp
+  ;
 
   var b2Vec2 = Box2D.Common.Math.b2Vec2;
 
@@ -47,8 +49,8 @@
         y = o.y + k*v.y;
         if ( k > 0 && 0 <= y && y <= H ) {
           return new b2Vec2(
-            x + (!x ? padding : -padding), 
-            y + (!y ? padding : -padding)
+            clamp(padding, W-padding, x),
+            clamp(padding, H-padding, y)
           );
         }
       }
@@ -60,8 +62,8 @@
         x = o.x + k*v.x;
         if ( k > 0 && 0 <= x && x <= W ) {
           return new b2Vec2(
-            x + (!x ? padding : -padding), 
-            y + (!y ? padding : -padding)
+            clamp(padding, W-padding, x),
+            clamp(padding, H-padding, y)
           );
         }
       }

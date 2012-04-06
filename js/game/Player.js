@@ -165,7 +165,7 @@
     var POWER_CIRCLE_OPEN = 0.05 * Math.PI;
     var POWER_CURSOR_SIZE = 10;
     var POWER_CIRCLE_LINEWIDTH = 5;
-    var POWER_CIRCLE_COLOR = 'rgba(100,80,60,0.5)';
+    var POWER_CIRCLE_COLOR = 'rgba(150,130,60,0.5)';
     function drawPowerCircle (ctx) {
       var pos = self.getPosition();
       var mouseP = self.controls.getCursorPosition && self.controls.getCursorPosition();

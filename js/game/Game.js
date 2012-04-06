@@ -87,7 +87,7 @@
       v.Subtract(playerPosition);
       var dist = v.Normalize();
       var mindist = new b2Vec2(self.world.width, self.world.height).Normalize()/DRAW_SCALE;
-      var size = 30*(1-1.5*smoothstep(0, mindist, dist));
+      var size = 40*(1-1.2*smoothstep(0, mindist, dist));
 
       if (size > 0) {
         var p = self.camera.projectOnBounds(playerPosition, v, size+5);
