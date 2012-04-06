@@ -1,7 +1,7 @@
 {
   "width": 3000,
   "height": 2250,
-  "start": { "x": 125, "y": 85 },
+  "start": { "x": 150, "y": 500 },
   "candlesToWin": 2,
   "objects": {
     "candles": [
