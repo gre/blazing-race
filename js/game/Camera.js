@@ -47,7 +47,7 @@
         y = o.y + k*v.y;
         if ( k > 0 && 0 <= y && y <= H ) {
           return new b2Vec2(
-            x + (!y ? padding : -padding), 
+            x + (!x ? padding : -padding), 
             y + (!y ? padding : -padding)
           );
         }
