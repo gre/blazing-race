@@ -4,11 +4,17 @@
   var	b2DebugDraw = Box2D.Dynamics.b2DebugDraw;
 
   ns.Renderer = function (game, W, H, node, loader) {
+    var self = this;
 
     var canvas = node.find("canvas.game")[0];
     canvas.width = W;
     canvas.height = H;
     var ctx = canvas.getContext("2d");
+
+    self.resize = function (w, h) {
+      canvas.width = w;
+      canvas.height = h;
+    }
 
     var _initDebug = false;
     function initDebug () {

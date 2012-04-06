@@ -65,6 +65,16 @@ $(function(){
       rendering.start();
     });
 
+    var lastWidth, lastHeight;
+    $(window).resize(function () {
+      var w = Math.max(400, $(window).width()-30);
+      var h = Math.max(300, $(window).height()-60);
+      if (w !== lastWidth || h !== lastHeight) {
+        node.width(w).height(h);
+        rendering.resize(w, h);
+      }
+    }).resize();
+
     BlazingRace.game = game; // save the game for debugging
   });
 
