@@ -12,6 +12,11 @@
     self.width = width;
     self.height = height;
 
+    self.resize = function (w, h) {
+      self.width = w;
+      self.height = h;
+    }
+
     self.E = makeEvent({});
 
     self.getPosition = function () {

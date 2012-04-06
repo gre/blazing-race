@@ -71,6 +71,7 @@ $(function(){
       var h = Math.max(200, $(window).height()-60);
       if (w !== lastWidth || h !== lastHeight) {
         node.width(w).height(h);
+        camera.resize(w, h);
         rendering.resize(w, h);
       }
     }).resize();
