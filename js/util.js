@@ -1,5 +1,7 @@
 (function(ns){
 ns.util = {
+  clamp: function (min, max, value) { return Math.max(min, Math.min(max, value)) },
+  smoothstep: function (min, max, value) { return Math.max(0, Math.min(1, (value-min)/(max-min))); },
   makeEvent: function (_){return {
     pub:function (a,b,c,d){for(d=-1,c=[].concat(_[a]);c[++d];)c[d](b)},
     sub:function (a,b){(_[a]||(_[a]=[])).push(b)},
