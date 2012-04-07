@@ -5,8 +5,8 @@
       <author>Blender User</author>
       <authoring_tool>Blender 2.62.0 runknown</authoring_tool>
     </contributor>
-    <created>2012-04-07T15:54:31</created>
-    <modified>2012-04-07T15:54:31</modified>
+    <created>2012-04-07T17:19:36</created>
+    <modified>2012-04-07T17:19:36</modified>
     <unit name="meter" meter="1"/>
     <up_axis>Z_UP</up_axis>
   </asset>
@@ -93,6 +93,41 @@
     </light>
   </library_lights>
   <library_effects>
+    <effect id="no-oxygen-effect">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color sid="ambient">0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <color sid="diffuse">0.8 0.0865284 0.7815521 1</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">0.5 0.5 0.5 1</color>
+            </specular>
+            <shininess>
+              <float sid="shininess">50</float>
+            </shininess>
+            <transparency>
+              <float sid="transparency">0</float>
+            </transparency>
+            <index_of_refraction>
+              <float sid="index_of_refraction">1</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+        <extra>
+          <technique profile="GOOGLEEARTH">
+            <double_sided>1</double_sided>
+          </technique>
+        </extra>
+      </profile_COMMON>
+      <extra><technique profile="MAX3D"><double_sided>1</double_sided></technique></extra>
+    </effect>
     <effect id="water-effect">
       <profile_COMMON>
         <technique sid="common">
@@ -147,6 +182,9 @@
     </effect>
   </library_effects>
   <library_materials>
+    <material id="no-oxygen-material" name="no-oxygen">
+      <instance_effect url="#no-oxygen-effect"/>
+    </material>
     <material id="water-material" name="water">
       <instance_effect url="#water-effect"/>
     </material>
@@ -155,34 +193,68 @@
     </material>
   </library_materials>
   <library_geometries>
-    <geometry id="Plane-mesh" name="Plane">
+    <geometry id="no-oxygen-mesh" name="no-oxygen">
       <mesh>
-        <source id="Plane-mesh-positions">
-          <float_array id="Plane-mesh-positions-array" count="60">-3.538248 -3.379783 0 -3.538248 -3.693998 0 -4.9354 -3.693998 0 -4.9354 -3.379783 0 -0.1488978 -3.242058 0 -0.1488984 -3.6814 0 1.655214 -3.6814 0 1.655214 -3.242058 0 0.1200188 1.178024 0 0.1200188 0.738683 0 -2.451691 0.4764205 0 -2.867472 1.178024 0 4.966914 -3.022035 0 4.966914 -3.689497 0 3.753402 -3.677173 0 3.876648 -3.022035 0 1.036617 1.301601 0 1.036616 0.8545536 0 3.301274 1.008069 0 3.170786 1.301601 0</float_array>
+        <source id="no-oxygen-mesh-positions">
+          <float_array id="no-oxygen-mesh-positions-array" count="54">-2.484853 -1.791057 0 -2.40047 -2.111069 0 -3.004316 -2.103398 0 -3.104041 -1.806399 0 -0.3500887 -0.9012005 0 -0.3654313 -1.130693 0 0.4148516 -1.075461 0 0.4225227 -0.8168179 0 -1.168173 0.6466219 0 -1.175844 0.3879793 0 -1.972108 0.2848029 0 -1.940784 0.5622393 0 0.1488727 0.4910985 0 0.1565438 0.7497411 0 3.255002 0.9987613 0 3.277395 0.7072381 0 1.040754 0.5354376 0 1.018362 0.8269611 0</float_array>
           <technique_common>
-            <accessor source="#Plane-mesh-positions-array" count="20" stride="3">
+            <accessor source="#no-oxygen-mesh-positions-array" count="18" stride="3">
               <param name="X" type="float"/>
               <param name="Y" type="float"/>
               <param name="Z" type="float"/>
             </accessor>
           </technique_common>
         </source>
-        <source id="Plane-mesh-normals">
-          <float_array id="Plane-mesh-normals-array" count="15">0 0 1 0 0 1 0 0 1 0 0 1 0 0 1</float_array>
+        <source id="no-oxygen-mesh-normals">
+          <float_array id="no-oxygen-mesh-normals-array" count="15">0 0 1 0 0 1 0 0 1 0 0 1 0 0 1</float_array>
           <technique_common>
-            <accessor source="#Plane-mesh-normals-array" count="5" stride="3">
+            <accessor source="#no-oxygen-mesh-normals-array" count="5" stride="3">
               <param name="X" type="float"/>
               <param name="Y" type="float"/>
               <param name="Z" type="float"/>
             </accessor>
           </technique_common>
         </source>
-        <vertices id="Plane-mesh-vertices">
-          <input semantic="POSITION" source="#Plane-mesh-positions"/>
+        <vertices id="no-oxygen-mesh-vertices">
+          <input semantic="POSITION" source="#no-oxygen-mesh-positions"/>
+        </vertices>
+        <polylist material="no-oxygen1" count="5">
+          <input semantic="VERTEX" source="#no-oxygen-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#no-oxygen-mesh-normals" offset="1"/>
+          <vcount>4 4 4 4 4 </vcount>
+          <p>0 0 3 0 2 0 1 0 7 1 4 1 5 1 6 1 8 2 11 2 10 2 9 2 8 3 9 3 12 3 13 3 16 4 15 4 14 4 17 4</p>
+        </polylist>
+      </mesh>
+      <extra><technique profile="MAYA"><double_sided>1</double_sided></technique></extra>
+    </geometry>
+    <geometry id="water-mesh" name="water">
+      <mesh>
+        <source id="water-mesh-positions">
+          <float_array id="water-mesh-positions-array" count="60">-3.538248 -3.379783 0 -3.538248 -3.693998 0 -4.9354 -3.693998 0 -4.9354 -3.379783 0 -0.1488978 -3.242058 0 -0.1488984 -3.6814 0 1.655214 -3.6814 0 1.655214 -3.242058 0 0.1200188 1.178024 0 0.1200188 0.738683 0 -2.451691 0.4764205 0 -2.867472 1.178024 0 4.966914 -3.022035 0 4.966914 -3.689497 0 3.753402 -3.677173 0 3.876648 -3.022035 0 1.036617 1.301601 0 1.036616 0.8545536 0 3.301274 1.008069 0 3.170786 1.301601 0</float_array>
+          <technique_common>
+            <accessor source="#water-mesh-positions-array" count="20" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="water-mesh-normals">
+          <float_array id="water-mesh-normals-array" count="15">0 0 1 0 0 1 0 0 1 0 0 1 0 0 1</float_array>
+          <technique_common>
+            <accessor source="#water-mesh-normals-array" count="5" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="water-mesh-vertices">
+          <input semantic="POSITION" source="#water-mesh-positions"/>
         </vertices>
         <polylist material="water1" count="5">
-          <input semantic="VERTEX" source="#Plane-mesh-vertices" offset="0"/>
-          <input semantic="NORMAL" source="#Plane-mesh-normals" offset="1"/>
+          <input semantic="VERTEX" source="#water-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#water-mesh-normals" offset="1"/>
           <vcount>4 4 4 4 4 </vcount>
           <p>0 0 3 0 2 0 1 0 7 1 4 1 5 1 6 1 8 2 11 2 10 2 9 2 12 3 15 3 14 3 13 3 19 4 16 4 17 4 18 4</p>
         </polylist>
@@ -261,13 +333,27 @@
         <rotate sid="rotationX">1 0 0 0</rotate>
         <scale sid="scale">1 1 1</scale>
       </node>
-      <node id="Plane" type="NODE">
+      <node id="no-oxygen" type="NODE">
+        <translate sid="location">0 0 -2</translate>
+        <rotate sid="rotationZ">0 0 1 0</rotate>
+        <rotate sid="rotationY">0 1 0 0</rotate>
+        <rotate sid="rotationX">1 0 0 0</rotate>
+        <scale sid="scale">0.9999316 1 1</scale>
+        <instance_geometry url="#no-oxygen-mesh">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="no-oxygen1" target="#no-oxygen-material"/>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+      <node id="water" type="NODE">
         <translate sid="location">0 0 -1</translate>
         <rotate sid="rotationZ">0 0 1 0</rotate>
         <rotate sid="rotationY">0 1 0 0</rotate>
         <rotate sid="rotationX">1 0 0 0</rotate>
         <scale sid="scale">1 1 1</scale>
-        <instance_geometry url="#Plane-mesh">
+        <instance_geometry url="#water-mesh">
           <bind_material>
             <technique_common>
               <instance_material symbol="water1" target="#water-material"/>
@@ -289,6 +375,14 @@
         <rotate sid="rotationX">1 0 0 0</rotate>
         <scale sid="scale">1 1 1</scale>
       </node>
+      <node id="Sun" type="NODE">
+        <translate sid="location">0 0 20</translate>
+        <rotate sid="rotationZ">0 0 1 0</rotate>
+        <rotate sid="rotationY">0 1 0 0</rotate>
+        <rotate sid="rotationX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+        <instance_light url="#Sun-light"/>
+      </node>
       <node id="ground" type="NODE">
         <translate sid="location">0 0 0</translate>
         <rotate sid="rotationZ">0 0 1 0</rotate>
@@ -302,6 +396,14 @@
             </technique_common>
           </bind_material>
         </instance_geometry>
+      </node>
+      <node id="Camera" type="NODE">
+        <translate sid="location">0 0 15</translate>
+        <rotate sid="rotationZ">0 0 1 0</rotate>
+        <rotate sid="rotationY">0 1 0 0</rotate>
+        <rotate sid="rotationX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+        <instance_camera url="#Camera-camera"/>
       </node>
     </visual_scene>
   </library_visual_scenes>
