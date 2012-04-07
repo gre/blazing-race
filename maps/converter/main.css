@@ -1,0 +1,32 @@
+section {
+  width: 48%;
+  padding: 1%;
+  float: left;
+}
+
+textarea {
+  width: 100%;
+}
+
+div.buttons {
+  padding: 5px;
+  text-align: center;
+  background: #eee;
+}
+
+fieldset {
+  border: none;
+  border-top: 2px solid #ccc;
+}
+fieldset legend {
+  color: #888;
+}
+
+fieldset > div {
+  margin: 5px 0;
+}
+
+button[type=submit] {
+  font-size: 1.2em;
+  color: #666;
+}

@@ -3,10 +3,10 @@
   <asset>
     <contributor>
       <author>Blender User</author>
-      <authoring_tool>Blender 2.62.0 runknown</authoring_tool>
+      <authoring_tool>Blender 2.62.0 r44136</authoring_tool>
     </contributor>
-    <created>2012-04-07T17:19:36</created>
-    <modified>2012-04-07T17:19:36</modified>
+    <created>2012-04-08T00:41:02</created>
+    <modified>2012-04-08T00:41:02</modified>
     <unit name="meter" meter="1"/>
     <up_axis>Z_UP</up_axis>
   </asset>
@@ -298,6 +298,13 @@
   </library_geometries>
   <library_visual_scenes>
     <visual_scene id="Scene" name="Scene">
+      <node id="world_size" type="NODE">
+        <translate sid="location">0 0 -10</translate>
+        <rotate sid="rotationZ">0 0 1 0</rotate>
+        <rotate sid="rotationY">0 1 0 0</rotate>
+        <rotate sid="rotationX">1 0 0 0</rotate>
+        <scale sid="scale">0.1 0.1 0.1</scale>
+      </node>
       <node id="candle_005" type="NODE">
         <translate sid="location">-4.620488 2.535198 1</translate>
         <rotate sid="rotationZ">0 0 1 0</rotate>
@@ -398,7 +405,7 @@
         </instance_geometry>
       </node>
       <node id="Camera" type="NODE">
-        <translate sid="location">0 0 15</translate>
+        <translate sid="location">0 0 100</translate>
         <rotate sid="rotationZ">0 0 1 0</rotate>
         <rotate sid="rotationY">0 1 0 0</rotate>
         <rotate sid="rotationX">1 0 0 0</rotate>
