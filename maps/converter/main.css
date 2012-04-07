@@ -1,0 +1,104 @@
+
+html {
+  font-family: 'Cabin', serif;
+  background: #f6f6f6;
+}
+
+a {
+  color: #3ad;
+  text-decoration: none;
+}
+a:hover {
+  color: #5cf;
+}
+
+h1 {
+  font-weight: bold;
+}
+h2 {
+  font-weight: normal;
+}
+
+#wrapper {
+  margin: 10px auto;
+  padding: 10px;
+  max-width: 800px;
+}
+
+textarea.full {
+  width: 100%;
+}
+
+div.buttons {
+  padding: 5px;
+  text-align: center;
+  background: #eee;
+}
+
+fieldset {
+  border: none;
+  border-top: 2px solid #ccc;
+}
+fieldset legend {
+  color: #888;
+}
+
+fieldset > div {
+  margin: 5px 0;
+}
+
+button[type=submit] {
+  font-size: 1.2em;
+  color: #666;
+}
+
+ul.extractors input[type=text] {
+  border: #ccc solid 1px;
+  width: 50px;
+}
+
+ul.extractors {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+a.clone, a.delete {
+  color: #000;
+  border-radius: 10px;
+  padding: 0px 3px;
+  text-decoration: none;
+  width: 10px;
+  text-align: center;
+  font-weight: bold;
+  display: inline-block;
+}
+a.clone {
+  background: #cfc;
+}
+a.delete {
+  background: #fcc;
+}
+
+#viewport, #legend {
+  float: left;
+}
+
+#viewport canvas {
+  background: url(alpha_mask.png);
+}
+
+#legend {
+  margin-left: 10px;
+}
+
+#legend p {
+  padding: 0;
+  margin: 0;
+}
+
+#legend .color {
+  border-radius: 10px;
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+}

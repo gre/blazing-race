@@ -28,7 +28,14 @@
     self.canvasToRealPosition = function (p) {
       return new b2Vec2(
         (-self.x + p.x)/DRAW_SCALE,
-        (-self.y + p.y)/DRAW_SCALE
+        (-self.y + self.height - p.y)/DRAW_SCALE
+      )
+    }
+
+    self.realPositionToCanvas = function (p) {
+      return new b2Vec2(
+        self.x + DRAW_SCALE*p.x,
+        -self.y -DRAW_SCALE*(p.y)+self.height
       )
     }
 
@@ -36,9 +43,9 @@
     // to the camera bound with a given padding.
     self.projectOnBounds = function (o, v, padding) {
       var W = self.width, H = self.height;
-      o = o.Copy();
-      o.Multiply(DRAW_SCALE);
-      o.Add(self.getPosition());
+      o = self.realPositionToCanvas(o);
+      v.Normalize();
+      v.y *= -1;
       if (!padding) padding = 0;
       var x, y, k;
 
@@ -72,24 +79,24 @@
     // Move the camera centered to the position v
     self.focusOn = function (v) {
       var x, y;
-      if (world.width > self.width) {
-        if (v.x*DRAW_SCALE < (world.width - self.width/2) && v.x*DRAW_SCALE > self.width/2) {
+      if (DRAW_SCALE*world.width > self.width) {
+        if (v.x*DRAW_SCALE < (DRAW_SCALE*world.width - self.width/2) && v.x*DRAW_SCALE > self.width/2) {
           x = -(v.x*DRAW_SCALE)+(self.width/2);
         }
-        else if(v.x*DRAW_SCALE >= (world.width-self.width/2)) {
-          x = self.width-world.width;
+        else if(v.x*DRAW_SCALE >= (DRAW_SCALE*world.width-self.width/2)) {
+          x = self.width-DRAW_SCALE*world.width;
         }
         else {
           x = 0;
         }
         self.x = x;
       }
-      if(world.height > self.height) {
-        if(v.y*DRAW_SCALE < (world.height - self.height/2) && v.y*DRAW_SCALE > self.height/2) {
+      if(DRAW_SCALE*world.height > self.height) {
+        if(v.y*DRAW_SCALE < (DRAW_SCALE*world.height - self.height/2) && v.y*DRAW_SCALE > self.height/2) {
           y = -(v.y*DRAW_SCALE)+(self.height/2);
         }
-        else if(v.y*DRAW_SCALE >= (world.height - self.height/2)) {
-          y = (self.height - world.height);
+        else if(v.y*DRAW_SCALE >= (DRAW_SCALE*world.height - self.height/2)) {
+          y = (self.height - DRAW_SCALE*world.height);
         }
         else {
           y = 0;

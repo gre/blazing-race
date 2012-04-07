@@ -1,0 +1,242 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title></title>
+  <link rel="stylesheet" href="main.css" />
+  <link href='http://fonts.googleapis.com/css?family=Cabin' rel='stylesheet' type='text/css'>
+  <script type="text/javascript" src="lib/Three.js"></script>
+  <script type="text/javascript" src="lib/ColladaLoader.js"></script>
+  <script src="lib/jquery.min.js" type="text/javascript"></script>
+  <script src="lib/underscore-min.js" type="text/javascript"></script>
+  <script src="blazingRaceConverter.js" type="text/javascript"></script>
+</head>
+<body>
+
+  <div id="wrapper">
+    <h1>2D Game Map COLLADA Importer</h1>
+
+  <section>
+    <h2>Step 1 - create your map with a 3D editor (like Blender)</h2>
+    <a href="#todo">Follow the tutorial</a>
+  </section>
+
+  <section>
+    <h2>Step 2 - put here your COLLADA export</h2>
+    <!--
+    <div>
+      <input type="file" id="collada_file" />
+    </div>
+    -->
+    <div>
+      <textarea class="full" id="collada_text" name="" rows="10" cols="30"></textarea>
+    </div>
+  </section>
+
+  <section>
+    <h2>Step 3 - Define your needs</h2>
+   
+    <em style="background: red; color: white; padding: 1px 4px;">This is static for now (TODO)</em>
+
+    <h3>Game scale</h3>
+    <div>
+      <input type="checkbox" id="usecamera" checked="checked" />
+      <label for="usecamera">normalize using "topleft" and "bottomright" objects.</label>
+    </div>
+    <div>
+      <input type="checkbox" id="gamescale" checked="checked" />
+      <label for="gamescale">use this object scale : </label>
+      <input type="text" name="galescale_name" value="world_size" />
+    </div>
+
+    <h3>Objects</h3>
+    <div>
+      <ul class="extractors">
+        <li>
+          <a href="#" class="clone">+</a>
+          <input type="text" name="destination" placeholder="name" />
+          =
+          select
+          <select name="map">
+            <option value="position">position</option>
+            <option value="polygons">polygons</option>
+            <option value="js">map function</option>
+          </select>
+          <input type="text" name="map_value" />
+
+          where
+          <select name="filter">
+            <option value="z_is">z=</option>
+            <option value="name_is">name=</option>
+            <option value="js">filter function</option>
+          </select>
+          <input type="text" name="filter_value" />
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Step 4 - get your json map</h2>
+    <div>
+      <textarea id="json" class="full" name="" rows="18" cols="30" readonly></textarea>
+    </div>
+
+    <h3>Preview</h3>
+  	<div id="viewport"></div>
+    <div id="legend"></div>
+  </section>
+
+  </div>
+
+
+<script type="text/javascript">
+$('.extractors .delete').live("click", function (e) {
+  e.preventDefault();
+  var li = $(this).parents("li:first");
+  li.remove();
+});
+$('.extractors .clone').live("click", function (e) {
+  e.preventDefault();
+  var li = $(this).parents("li:first");
+  var l = li.clone();
+  l.find(".clone").removeClass("clone").addClass("delete").text("-");
+  li.parent().append(l);
+});
+
+(function(){
+ var li = $('.extractors li:first');
+
+ function fill (l, name, map, mapValue, filter, filterValue) {
+   l.find("[name=destination]").val(name);
+   l.find("[name=map] option[value="+map+"]").attr("selected", "selected");
+   l.find("[name=map_value]").val(mapValue);
+   l.find("[name=filter] option[value="+filter+"]").attr("selected", "selected");
+   l.find("[name=filter_value]").val(filterValue);
+  return l;
+ }
+
+ function newExtractor (name, map, mapValue, filter, filterValue) {
+   var l = li.clone();
+   l.find(".clone").removeClass("clone").addClass("delete").text("-");
+   fill(l, name, map, mapValue, filter, filterValue);
+   return l;
+ }
+
+ fill(li, "start", "position", "", "z_is", "2");
+ li.parent().append(newExtractor("candles", "position", "", "z_is", "1"));
+ li.parent().append(newExtractor("grounds", "polygons", "", "z_is", "0"));
+ li.parent().append(newExtractor("waters", "polygons", "", "z_is", "-1"));
+ li.parent().append(newExtractor("noOxygens", "polygons", "", "z_is", "-2"));
+
+}());
+
+var a = 0;
+function randomColor (i, o) {
+  if (i===undefined) i = 50;
+  if (o===undefined) o = 1;
+  var v = 255*a/360;
+  a += 137.5;
+  if (a > 360) a -= 360;
+  return 'hsla('+v+',80%,'+i+'%,'+o+')';
+}
+
+function addLegend (color, name, polygon) {
+  var span;
+  if (polygon) {
+    span = '<span class="color" style="background-color: '+color+'"></span>';
+  }
+  else {
+    span = '<span class="color" style="color: '+color+'">+</span>';
+  }
+  $('#legend').append('<p>'+span+' '+name+'</p>');
+}
+
+function draw (map) {
+  var container = $('#viewport').empty();
+  $('#legend').empty();
+  a = 0;
+  var w = 500;
+  var h = Math.floor(w * map.height/map.width);
+  var CROSS_SIZE = 3;
+  var canvas = $('<canvas width="'+w+'" height="'+h+'"></canvas>');
+  var ctx = canvas[0].getContext("2d");
+  for (var name in map) {
+    var objs = map[name];
+    if (objs[0] && objs[0].faces) {
+      var color = randomColor(70, 0.8);
+      ctx.fillStyle = color;
+      for (var i=0; i<objs.length; ++i) {
+        var obj = objs[i];
+        for (var f=0; f<obj.faces.length; ++f) {
+          var face = obj.faces[f];
+          ctx.beginPath();
+          for (var v=0; v<face.length; ++v) {
+            var vertice = obj.vertices[face[v]];
+            var x = ctx.canvas.width*vertice.x/map.width;
+            var y = ctx.canvas.height*(1-vertice.y/map.height);
+            if (v==0)
+              ctx.moveTo(x, y);
+            else
+              ctx.lineTo(x, y);
+          }
+          ctx.fill();
+        }
+      }
+      addLegend(color, name, true);
+    }
+  }
+  for (var name in map) {
+    var objs = map[name];
+    if (objs[0] && objs[0].x) {
+      var color = randomColor(50);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      for (var i=0; i<objs.length; ++i) {
+        var p = objs[i];
+        var x = ctx.canvas.width*p.x/map.width;
+        var y = ctx.canvas.height*(1-p.y/map.height);
+        ctx.beginPath();
+        ctx.moveTo(x-CROSS_SIZE, y);
+        ctx.lineTo(x+CROSS_SIZE, y);
+        ctx.moveTo(x, y-CROSS_SIZE);
+        ctx.lineTo(x, y+CROSS_SIZE);
+        ctx.stroke();
+      }
+      addLegend(color, name, false);
+    }
+  }
+  container.append(canvas);
+}
+
+function convert () {
+  var converter = new Converter($('#collada_text').val());
+  var result = converter.convert();
+  $("#json").text(JSON.stringify(result));
+  draw(result);
+}
+
+function tryConvert () {
+  try {
+    convert();
+  }
+  catch (e) {
+    console.log(e);
+  }
+}
+
+tryConvert();
+
+
+$('#json').focus(function(e){
+  e.preventDefault();
+  tryConvert();
+  $(this).select();
+});
+
+$('#collada_text').change(tryConvert);
+
+
+</script>
+</body>
+</html>

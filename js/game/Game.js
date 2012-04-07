@@ -58,7 +58,7 @@
     }
 
     function won () {
-      return self.candleCount >= world.map.candlesToWin;
+      return self.candleCount >= world.map.candles.length;
     }
 
     self.checkGameState = function () {
@@ -86,12 +86,11 @@
       var v = candle.GetPosition().Copy();
       v.Subtract(playerPosition);
       var dist = v.Normalize();
-      var mindist = new b2Vec2(self.world.width, self.world.height).Normalize()/DRAW_SCALE;
+      var mindist = new b2Vec2(self.world.width, self.world.height).Normalize();
       var size = 40*(1-1.2*smoothstep(0, mindist, dist));
 
       if (size > 0) {
         var p = self.camera.projectOnBounds(playerPosition, v, size+5);
-        p.Subtract(self.camera.getPosition());
 
         ctx.save();
         ctx.translate(p.x, p.y);
@@ -109,21 +108,18 @@
       }
     }
 
-    function drawCandle (ctx, candle) {
+    function drawCandle (ctx, candle, camera, i) {
       var position = candle.GetPosition();
       var fixture = candle.GetFixtureList();
       var lighted = fixture.GetBody().GetUserData().lighted;
-      var x = position.x * DRAW_SCALE;
-      var y = position.y * DRAW_SCALE;
+
+      var p = camera.realPositionToCanvas(position);
       var w = ctx.canvas.width;
       var h = ctx.canvas.height;
 
-      var ax = x + self.camera.x;
-      var ay = y + self.camera.y;
-
       var visible = (function (x, y) {
         return -CANDLE_W/2 < x && x < w+CANDLE_W/2 && -CANDLE_H/2 < y && y < h+CANDLE_H/2;
-      }(ax, ay));
+      }(p.x, p.y));
 
       if (!visible && !lighted) {
         drawCandleIndicator(ctx, candle);
@@ -131,7 +127,7 @@
 
       if (visible) {
         ctx.save();
-        ctx.translate(x, y);
+        ctx.translate(p.x, p.y);
         if (lighted) {
           ctx.fillStyle = 'rgb(255, 200, 150)';
           ctx.drawImage(candleOn, -CANDLE_W/2, -CANDLE_W/2-(CANDLE_H-CANDLE_W), CANDLE_W, CANDLE_H);
@@ -145,7 +141,7 @@
     }
     
     function drawBackground (ctx) {
-      ctx.fillStyle = 'rgb(100, 70, 50)';
+      ctx.fillStyle = 'rgb(20, 20, 20)';
       ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     }
 
@@ -158,15 +154,18 @@
       self.player.setup(loader);
     }
 
-    self.render = function (ctx) {
-      ctx.save();
+    self.render = function (ctx, camera) {
       drawBackground(ctx);
+      self.world.render(ctx, camera);
+      /*
+      ctx.save();
       ctx.translate(self.camera.x, self.camera.y);
-      self.world.render(ctx);
+      */
       for (var i = 0; i < self.world.candles.length; ++i) {
-        drawCandle(ctx, self.world.candles[i]);
+        drawCandle(ctx, self.world.candles[i], camera, i);
       }
-      self.player.render(ctx);
+      //ctx.restore();
+      self.player.render(ctx, camera);
     }
   }
 

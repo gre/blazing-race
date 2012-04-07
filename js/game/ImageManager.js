@@ -1,5 +1,5 @@
 (function(ns){
-  // TODO
+  // TODO : setResource , a { name: path, name: path } would be better
    ns.ImageManager =  function (images, dir, ext) {
     var self = this;
     var count = 0;

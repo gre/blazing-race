@@ -1,5 +1,6 @@
 (function(ns){
   ns.DEBUG = false;
+  //ns.DEBUG = true;
 
   var	b2DebugDraw = Box2D.Dynamics.b2DebugDraw;
 
@@ -34,6 +35,7 @@
     }
 
     function render () {
+      var camera = game.camera;
       ctx.save();
       if (ns.DEBUG) {
         if (!_initDebug) initDebug();
@@ -42,7 +44,7 @@
         game.world.world.DrawDebugData();
       }
       else {
-        game.render(ctx);
+        game.render(ctx, camera);
       }
       ctx.restore();
     }

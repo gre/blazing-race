@@ -27,19 +27,21 @@ $(function(){
     var H = node.height();
 
     var loader = new ImageManager([
+      "maps_01",
       "coal",
       "candle-off",
       "candle-on"
       ], "images/", ".png");
 
     // FIXME : some constructor should not depends on other components, try to avoid almost all dependencies and use loosely coupled events
+    // TODO new Map(map);
     var world = new World(map);
     var controls = isMobile ? new TouchControls(node) : new MouseControls(node);
     var camera = new Camera(world, W, H);
     var game = new Game(world, camera);
     var rendering = new Renderer(game, W, H, node, loader);
     var recorder = new GameRecorder(game);
-    var player = new Player(game, map.start.x, map.start.y, controls, camera);
+    var player = new Player(game, map.start[0].x, map.start[0].y, controls, camera);
     game.player = player; // oh fuck!
 
     // TODO I like these lines, need to rewrite lot of things like this:
