@@ -3,6 +3,7 @@
   var makeEvent = BlazingRace.util.makeEvent;
 
   var b2Vec2 = Box2D.Common.Math.b2Vec2
+  , b2BuoyancyController = Box2D.Dynamics.Controllers.b2BuoyancyController
   , b2World = Box2D.Dynamics.b2World
   ,	b2FixtureDef = Box2D.Dynamics.b2FixtureDef
   ,	b2BodyDef = Box2D.Dynamics.b2BodyDef
@@ -23,6 +24,12 @@
     self.candles = [];
 
     self.E = makeEvent({});
+
+    var fluid = new b2BuoyancyController();
+    fluid.offset = -70;
+    fluid.density = 1.2;
+    self.waterController = fluid;
+    self.world.AddController(fluid);
 
     var groundFixDef = new b2FixtureDef;
     groundFixDef.density = 1.0;
@@ -69,15 +76,26 @@
             body.CreateFixture(fixDef);
             self.candles.push(body);
           }
-        }
+        }            
+
+
         if (type == "waters") {
           for (var i = 0; i<value.length; ++i) {
+            var fixDef = new Box2D.Dynamics.b2FixtureDef();
+            fixDef.density = 1.0;
+            fixDef.friction = 0.5;
+            fixDef.restitution = 0.2;
+            fixDef.shape = new Box2D.Collision.Shapes.b2PolygonShape();
             var arr = asArray(value[i]);
             fixDef.shape.SetAsArray(arr, arr.length);
+
+            var bodyDef = new Box2D.Dynamics.b2BodyDef();
             bodyDef.position.Set(0,0);
+
             var water = world.CreateBody(bodyDef);
-            water.SetUserData({ type: "water" });
             water.CreateFixture(fixDef);
+            water.SetUserData({ type: "water" });
+            self.waterController.AddBody(water);
           }
         }
       }

@@ -11,6 +11,7 @@
     var self = this;
     self.size = 0.5;
     self.body = world.createPlayerBody(self.size, _x/DRAW_SCALE, _y/DRAW_SCALE);
+
     self.E = makeEvent({});
 
     self.controls = _controls;
