@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>COLLADA 2D Map Importer</title>
+	<title></title>
   <link rel="stylesheet" href="main.css" />
+  <link href='http://fonts.googleapis.com/css?family=Cabin' rel='stylesheet' type='text/css'>
   <script type="text/javascript" src="lib/Three.js"></script>
   <script type="text/javascript" src="lib/ColladaLoader.js"></script>
   <script src="lib/jquery.min.js" type="text/javascript"></script>
@@ -13,28 +14,29 @@
 <body>
 
   <div id="wrapper">
+    <h1>2D Game Map COLLADA Importer</h1>
 
   <section>
-    <h2>Step 1 - create your map with blender and export it</h2>
+    <h2>Step 1 - create your map with a 3D editor (like Blender)</h2>
     <a href="#todo">Follow the tutorial</a>
   </section>
 
   <section>
-    <h2>Step 2 - put your COLLADA</h2>
+    <h2>Step 2 - put here your COLLADA export</h2>
     <!--
     <div>
       <input type="file" id="collada_file" />
     </div>
     -->
     <div>
-      <textarea id="collada_text" name="" rows="10" cols="30"></textarea>
+      <textarea class="full" id="collada_text" name="" rows="10" cols="30"></textarea>
     </div>
   </section>
 
   <section>
     <h2>Step 3 - Define your needs</h2>
    
-    <em>This is static for now - TODO</em>
+    <em style="background: red; color: white; padding: 1px 4px;">This is static for now (TODO)</em>
 
     <h3>Game scale</h3>
     <div>
@@ -77,7 +79,7 @@
   <section>
     <h2>Step 4 - get your json map</h2>
     <div>
-      <textarea id="json" name="" rows="18" cols="30" readonly></textarea>
+      <textarea id="json" class="full" name="" rows="18" cols="30" readonly></textarea>
     </div>
 
     <h3>Preview</h3>
