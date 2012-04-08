@@ -6,7 +6,6 @@ var Z_GROUND = 0
   , Z_START = 2
   , Z_WATER = -1
   , Z_NO_OXYGEN = -2
-  , Z_WORLD_SCALE = -10
   ;
 
 function Converter (collada) {
@@ -16,7 +15,6 @@ function Converter (collada) {
     var xml = (new DOMParser()).parseFromString(collada, "text/xml");
 
     var c = loader.parse(xml);
-    C = c;
 
     var map = {
         candles: [],
@@ -26,27 +24,60 @@ function Converter (collada) {
     };
 
     var scale = { x: 1, y: 1 };
-    var boundingBox = _(c.scene.children).chain().
-      filter(function(node){
-        var z = Math.round(node.position.z);
-        return (z == Z_GROUND || z == Z_WATER) && node.geometry;
-      }).
-      map(function (node) { return node.geometry.boundingBox; }).  
-      reduce(function (a, b) {
-        if (!a) return b;
-        if (!b) return a;
-        return {
-          min: {
-            x: Math.min(a.min.x, b.min.x),
-            y: Math.min(a.min.y, b.min.y)
-          },
-          max: {
-            x: Math.max(a.max.x, b.max.x),
-            y: Math.max(a.max.y, b.max.y)
-          }
-        };
-      }, null).
-      value();
+    var boundingBox;
+    
+    function boundWithObjects () {
+      boundingBox = _(c.scene.children).chain().
+        filter(function(node){
+          var z = Math.round(node.position.z);
+          return (z == Z_GROUND || z == Z_WATER) && node.geometry;
+        }).
+        map(function (node) { return node.geometry.boundingBox; }).  
+        reduce(function (a, b) {
+          if (!a) return b;
+          if (!b) return a;
+          return {
+            min: {
+              x: Math.min(a.min.x, b.min.x),
+              y: Math.min(a.min.y, b.min.y)
+            },
+            max: {
+              x: Math.max(a.max.x, b.max.x),
+              y: Math.max(a.max.y, b.max.y)
+            }
+          };
+        }, null).
+        value();
+        console.log(boundingBox);
+      return true;
+    }
+
+    function boundWithMarks () {
+      var topleft = _(c.scene.children).filter(function(node){
+        return node.name=="topleft" || node.name=="top_left";
+      }).map(function(node){
+        return node.position;
+      })[0];
+      var bottomright = _(c.scene.children).filter(function(node){
+        return node.name=="bottomright" || node.name=="bottom_right";
+      }).map(function(node){
+        return node.position;
+      })[0];
+      if (!topleft || !bottomright) return false;
+      boundingBox = {
+        min: {
+          x: Math.min(topleft.x, bottomright.x),
+          y: Math.min(topleft.y, bottomright.y)
+        },
+        max: {
+          x: Math.max(topleft.x, bottomright.x),
+          y: Math.max(topleft.y, bottomright.y)
+        }
+      };
+      console.log(boundingBox);
+      return true;
+    }
+
 
     function addCandle (node) {
       map.candles.push({ x: node.position.x, y: node.position.y });
@@ -100,9 +131,14 @@ function Converter (collada) {
         case Z_START:  return setStart(node);
         case Z_WATER:  return addWater(node);
         case Z_NO_OXYGEN: return addNoOxygen(node);
-        case Z_WORLD_SCALE: return setWorldScale(node);
       }
     });
+
+    boundWithMarks() || boundWithObjects();
+
+    setWorldScale(_(c.scene.children).filter(function(node){
+      return node.name=="world_size";
+    })[0]);
 
     map.width = (boundingBox.max.x-boundingBox.min.x)/scale.x;
     map.height = (boundingBox.max.y-boundingBox.min.y)/scale.y;

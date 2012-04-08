@@ -63,6 +63,10 @@ a.delete {
   float: left;
 }
 
+#viewport canvas {
+  background: url(alpha_mask.png);
+}
+
 #legend {
   margin-left: 10px;
 }
