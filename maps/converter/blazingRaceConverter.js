@@ -19,12 +19,10 @@ function Converter (collada) {
     C = c;
 
     var map = {
-      objects: {
         candles: [],
         grounds: [],
         waters:  [],
         noOxygens: []
-      }
     };
 
     var scale = { x: 1, y: 1 };
@@ -51,7 +49,7 @@ function Converter (collada) {
       value();
 
     function addCandle (node) {
-      map.objects.candles.push({ x: node.position.x, y: node.position.y });
+      map.candles.push({ x: node.position.x, y: node.position.y });
     }
 
     function setWorldScale (node) {
@@ -59,7 +57,7 @@ function Converter (collada) {
     }
 
     function setStart (node) {
-      map.start = { x: node.position.x, y: node.position.y };
+      map.start = [{ x: node.position.x, y: node.position.y }];
     }
 
     function mapVerticesAndFaces (node) {
@@ -84,15 +82,15 @@ function Converter (collada) {
     }
 
     function addGround (node) {
-      map.objects.grounds.push(mapVerticesAndFaces(node));
+      map.grounds.push(mapVerticesAndFaces(node));
     }
 
     function addWater (node) {
-      map.objects.waters.push(mapVerticesAndFaces(node));
+      map.waters.push(mapVerticesAndFaces(node));
     }
 
     function addNoOxygen (node) {
-      map.objects.noOxygens.push(mapVerticesAndFaces(node));
+      map.noOxygens.push(mapVerticesAndFaces(node));
     }
 
     _(c.scene.children).each(function(node){
@@ -114,15 +112,15 @@ function Converter (collada) {
       p.y = (p.y-boundingBox.min.y)/scale.y;
     }
 
-    transformPosition(map.start);
-    _(map.objects.candles).each(transformPosition);
-    _(map.objects.grounds).each(function (g) {
+    transformPosition(map.start[0]);
+    _(map.candles).each(transformPosition);
+    _(map.grounds).each(function (g) {
       _(g.vertices).each(transformPosition);
     });
-    _(map.objects.waters).each(function (g) {
+    _(map.waters).each(function (g) {
       _(g.vertices).each(transformPosition);
     });
-    _(map.objects.noOxygens).each(function (g) {
+    _(map.noOxygens).each(function (g) {
       _(g.vertices).each(transformPosition);
     });
 

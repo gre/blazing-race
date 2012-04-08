@@ -12,37 +12,649 @@
 </head>
 <body>
 
+  <div id="wrapper">
+
   <section>
-    <form action="" id="collada">
-      <fieldset>
-        <legend>Select a COLLADA file or put its content</legend>
-        <div>
-          <input type="file" id="collada_file" />
-        </div>
-        <div>
-          <textarea id="collada_text" name="" rows="10" cols="30"></textarea>
-        </div>
-        <div class="buttons">
-          <button type="submit">Convert</button>
-        </div>
-      </fieldset>
-    </form>
+    <h2>Step 1 - create your map with blender and export it</h2>
+    <a href="#todo">Follow the tutorial</a>
   </section>
 
   <section>
+    <h2>Step 2 - put your COLLADA</h2>
+    <!--
     <div>
-      <textarea id="json" name="" rows="18" cols="30" readonly></textarea>
+      <input type="file" id="collada_file" />
+    </div>
+    -->
+    <div>
+      <textarea id="collada_text" name="" rows="10" cols="30">
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>Blender User</author>
+      <authoring_tool>Blender 2.62.0 r44136</authoring_tool>
+    </contributor>
+    <created>2012-04-08T00:41:02</created>
+    <modified>2012-04-08T00:41:02</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Z_UP</up_axis>
+  </asset>
+  <library_cameras>
+    <camera id="Camera-camera" name="Camera">
+      <optics>
+        <technique_common>
+          <orthographic>
+            <xmag sid="xmag">10</xmag>
+            <aspect_ratio>1.333333</aspect_ratio>
+            <znear sid="znear">0.1</znear>
+            <zfar sid="zfar">100</zfar>
+          </orthographic>
+        </technique_common>
+      </optics>
+    </camera>
+  </library_cameras>
+  <library_lights>
+    <light id="Sun-light" name="Sun">
+      <technique_common>
+        <directional>
+          <color sid="color">1 1 1</color>
+        </directional>
+      </technique_common>
+      <extra>
+        <technique profile="blender">
+          <adapt_thresh>0.000999987</adapt_thresh>
+          <area_shape>0</area_shape>
+          <area_size>1</area_size>
+          <area_sizey>1</area_sizey>
+          <area_sizez>1</area_sizez>
+          <atm_distance_factor>1</atm_distance_factor>
+          <atm_extinction_factor>1</atm_extinction_factor>
+          <atm_turbidity>2</atm_turbidity>
+          <att1>0</att1>
+          <att2>1</att2>
+          <backscattered_light>1</backscattered_light>
+          <bias>1</bias>
+          <blue>1</blue>
+          <buffers>1</buffers>
+          <bufflag>0</bufflag>
+          <bufsize>512</bufsize>
+          <buftype>2</buftype>
+          <clipend>40</clipend>
+          <clipsta>0.5</clipsta>
+          <compressthresh>0.04999995</compressthresh>
+          <dist sid="blender_dist">25</dist>
+          <energy sid="blender_energy">1</energy>
+          <falloff_type>2</falloff_type>
+          <filtertype>0</filtertype>
+          <flag>0</flag>
+          <gamma sid="blender_gamma">1</gamma>
+          <green>1</green>
+          <halo_intensity sid="blnder_halo_intensity">1</halo_intensity>
+          <horizon_brightness>1</horizon_brightness>
+          <mode>1</mode>
+          <ray_samp>1</ray_samp>
+          <ray_samp_method>1</ray_samp_method>
+          <ray_samp_type>0</ray_samp_type>
+          <ray_sampy>1</ray_sampy>
+          <ray_sampz>1</ray_sampz>
+          <red>1</red>
+          <samp>3</samp>
+          <shadhalostep>0</shadhalostep>
+          <shadow_b sid="blender_shadow_b">0</shadow_b>
+          <shadow_g sid="blender_shadow_g">0</shadow_g>
+          <shadow_r sid="blender_shadow_r">0</shadow_r>
+          <shadspotsize>45</shadspotsize>
+          <sky_colorspace>2</sky_colorspace>
+          <sky_exposure>1</sky_exposure>
+          <skyblendfac>1</skyblendfac>
+          <skyblendtype>1</skyblendtype>
+          <soft>3</soft>
+          <spotblend>0.15</spotblend>
+          <spotsize>45</spotsize>
+          <spread>1</spread>
+          <sun_brightness>1</sun_brightness>
+          <sun_effect_type>0</sun_effect_type>
+          <sun_intensity>1</sun_intensity>
+          <sun_size>1</sun_size>
+          <type>1</type>
+        </technique>
+      </extra>
+    </light>
+  </library_lights>
+  <library_effects>
+    <effect id="no-oxygen-effect">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color sid="ambient">0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <color sid="diffuse">0.8 0.0865284 0.7815521 1</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">0.5 0.5 0.5 1</color>
+            </specular>
+            <shininess>
+              <float sid="shininess">50</float>
+            </shininess>
+            <transparency>
+              <float sid="transparency">0</float>
+            </transparency>
+            <index_of_refraction>
+              <float sid="index_of_refraction">1</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+        <extra>
+          <technique profile="GOOGLEEARTH">
+            <double_sided>1</double_sided>
+          </technique>
+        </extra>
+      </profile_COMMON>
+      <extra><technique profile="MAX3D"><double_sided>1</double_sided></technique></extra>
+    </effect>
+    <effect id="water-effect">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color sid="ambient">0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <color sid="diffuse">0.1625907 0.4104007 0.64 1</color>
+            </diffuse>
+            <index_of_refraction>
+              <float sid="index_of_refraction">1</float>
+            </index_of_refraction>
+          </lambert>
+        </technique>
+        <extra>
+          <technique profile="GOOGLEEARTH">
+            <double_sided>1</double_sided>
+          </technique>
+        </extra>
+      </profile_COMMON>
+      <extra><technique profile="MAX3D"><double_sided>1</double_sided></technique></extra>
+    </effect>
+    <effect id="ground-effect">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color sid="ambient">0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <color sid="diffuse">0.2306314 0.1619009 0.1381229 1</color>
+            </diffuse>
+            <index_of_refraction>
+              <float sid="index_of_refraction">1</float>
+            </index_of_refraction>
+          </lambert>
+        </technique>
+        <extra>
+          <technique profile="GOOGLEEARTH">
+            <double_sided>1</double_sided>
+          </technique>
+        </extra>
+      </profile_COMMON>
+      <extra><technique profile="MAX3D"><double_sided>1</double_sided></technique></extra>
+    </effect>
+  </library_effects>
+  <library_materials>
+    <material id="no-oxygen-material" name="no-oxygen">
+      <instance_effect url="#no-oxygen-effect"/>
+    </material>
+    <material id="water-material" name="water">
+      <instance_effect url="#water-effect"/>
+    </material>
+    <material id="ground-material" name="ground">
+      <instance_effect url="#ground-effect"/>
+    </material>
+  </library_materials>
+  <library_geometries>
+    <geometry id="no-oxygen-mesh" name="no-oxygen">
+      <mesh>
+        <source id="no-oxygen-mesh-positions">
+          <float_array id="no-oxygen-mesh-positions-array" count="54">-2.484853 -1.791057 0 -2.40047 -2.111069 0 -3.004316 -2.103398 0 -3.104041 -1.806399 0 -0.3500887 -0.9012005 0 -0.3654313 -1.130693 0 0.4148516 -1.075461 0 0.4225227 -0.8168179 0 -1.168173 0.6466219 0 -1.175844 0.3879793 0 -1.972108 0.2848029 0 -1.940784 0.5622393 0 0.1488727 0.4910985 0 0.1565438 0.7497411 0 3.255002 0.9987613 0 3.277395 0.7072381 0 1.040754 0.5354376 0 1.018362 0.8269611 0</float_array>
+          <technique_common>
+            <accessor source="#no-oxygen-mesh-positions-array" count="18" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="no-oxygen-mesh-normals">
+          <float_array id="no-oxygen-mesh-normals-array" count="15">0 0 1 0 0 1 0 0 1 0 0 1 0 0 1</float_array>
+          <technique_common>
+            <accessor source="#no-oxygen-mesh-normals-array" count="5" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="no-oxygen-mesh-vertices">
+          <input semantic="POSITION" source="#no-oxygen-mesh-positions"/>
+        </vertices>
+        <polylist material="no-oxygen1" count="5">
+          <input semantic="VERTEX" source="#no-oxygen-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#no-oxygen-mesh-normals" offset="1"/>
+          <vcount>4 4 4 4 4 </vcount>
+          <p>0 0 3 0 2 0 1 0 7 1 4 1 5 1 6 1 8 2 11 2 10 2 9 2 8 3 9 3 12 3 13 3 16 4 15 4 14 4 17 4</p>
+        </polylist>
+      </mesh>
+      <extra><technique profile="MAYA"><double_sided>1</double_sided></technique></extra>
+    </geometry>
+    <geometry id="water-mesh" name="water">
+      <mesh>
+        <source id="water-mesh-positions">
+          <float_array id="water-mesh-positions-array" count="60">-3.538248 -3.379783 0 -3.538248 -3.693998 0 -4.9354 -3.693998 0 -4.9354 -3.379783 0 -0.1488978 -3.242058 0 -0.1488984 -3.6814 0 1.655214 -3.6814 0 1.655214 -3.242058 0 0.1200188 1.178024 0 0.1200188 0.738683 0 -2.451691 0.4764205 0 -2.867472 1.178024 0 4.966914 -3.022035 0 4.966914 -3.689497 0 3.753402 -3.677173 0 3.876648 -3.022035 0 1.036617 1.301601 0 1.036616 0.8545536 0 3.301274 1.008069 0 3.170786 1.301601 0</float_array>
+          <technique_common>
+            <accessor source="#water-mesh-positions-array" count="20" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="water-mesh-normals">
+          <float_array id="water-mesh-normals-array" count="15">0 0 1 0 0 1 0 0 1 0 0 1 0 0 1</float_array>
+          <technique_common>
+            <accessor source="#water-mesh-normals-array" count="5" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="water-mesh-vertices">
+          <input semantic="POSITION" source="#water-mesh-positions"/>
+        </vertices>
+        <polylist material="water1" count="5">
+          <input semantic="VERTEX" source="#water-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#water-mesh-normals" offset="1"/>
+          <vcount>4 4 4 4 4 </vcount>
+          <p>0 0 3 0 2 0 1 0 7 1 4 1 5 1 6 1 8 2 11 2 10 2 9 2 12 3 15 3 14 3 13 3 19 4 16 4 17 4 18 4</p>
+        </polylist>
+      </mesh>
+      <extra><technique profile="MAYA"><double_sided>1</double_sided></technique></extra>
+    </geometry>
+    <geometry id="ground-mesh" name="ground">
+      <mesh>
+        <source id="ground-mesh-positions">
+          <float_array id="ground-mesh-positions-array" count="957">-3.070542 2.92186 0 -3.04709 1.908347 0 -4.29074 1.903887 0 -4.295717 2.41243 0 -3.811116 1.551347 0 -3.055373 1.615551 0 -2.788912 1.410352 0 -3.544655 1.346149 0 -3.477542 1.269364 0 -2.721799 1.333567 0 -2.721799 1.333567 0 -3.477542 1.269364 0 -3.140547 0.3680366 0 -2.384804 0.4322397 0 -2.661321 -0.671571 0 -1.905578 -0.6073678 0 -2.271067 -0.08597856 0 -2.785952 -0.1297199 0 -3.304695 0.8167219 0 -2.634329 0.8736718 0 5 3.75 0 5 -3.75 0 -5.000001 -3.75 0 -4.999998 3.750002 0 -4.926144 3.675002 0 -4.926146 -3.675 0 4.926145 -3.675001 0 4.926146 3.675001 0 -4.331398 1.500425 0 -4.448926 1.020737 0 -4.931243 1.114068 0 -4.931243 1.500425 0 -4.254016 0.7664961 0 -3.818471 0.8901438 0 -3.16014 -0.08712309 0 -4.053623 -0.1062412 0 -3.051878 -0.4386413 0 -3.051878 -0.6763386 0 -3.289576 -0.6763386 0 -3.289576 -0.4386412 0 -4.125812 -0.4386412 0 -4.290072 -0.6663835 0 -4.968658 0.06303411 0 -4.943771 0.6242752 0 -4.995683 2.405581 0 -4.994104 2.244217 0 -4.273302 2.252455 0 -4.27488 2.413819 0 -4.759368 1.899302 0 -4.760436 2.008415 0 -4.265763 2.012036 0 -4.264695 1.902922 0 -1.67275 -0.5833702 0 -2.661221 -0.6716786 0 -2.248201 -1.508184 0 -1.64022 -1.048751 0 -1.586143 -2.263391 0 -1.875595 -2.339593 0 -2.392472 -1.161237 0 -2.516949 -0.9091306 0 -4.546933 -0.9804816 0 -4.512043 -1.237565 0 -3.787805 -1.184002 0 -3.787805 -2.574752 0 -4.024563 -2.574752 0 -4.024563 -1.184001 0 -3.483243 -2.423341 0 -3.483243 -2.568909 0 -3.795119 -2.568909 0 -3.795119 -2.423341 0 -4.932815 -2.520147 0 -4.932815 -2.595467 0 -4.566092 -2.595467 0 -4.566092 -2.520147 0 -3.974148 -3.158553 0 -3.974148 -3.233873 0 -4.568691 -3.233873 0 -4.568691 -3.158553 0 -3.52129 -1.507108 0 -3.465777 -1.638103 0 -3.025802 -1.622683 0 -3.11524 -1.392998 0 -2.994962 -2.091457 0 -3.320402 -1.419324 0 -3.320595 -1.636658 0 -3.314427 -2.09618 0 -3.253967 -2.645613 0 -2.962259 -2.643975 0 -2.958952 -3.299225 0 -3.25066 -3.234248 0 -2.974747 -3.249302 0 -2.970798 -3.708138 0 -3.531406 -3.703697 0 -3.589138 -3.14753 0 -2.340047 -3.699718 0 -2.340713 -3.317668 0 -1.80125 -3.339975 0 -1.783568 -3.698534 0 -2.445286 -2.083271 0 -2.445286 -2.328387 0 -3.001251 -2.309884 0 -3.001251 -2.064768 0 -2.075228 -2.398698 0 -2.204749 -2.083271 0 -2.300964 -1.831632 0 -2.541502 -1.831632 0 -2.71913 -1.598495 0 -2.478592 -1.598495 0 -2.865427 -1.659738 0 -2.809919 -1.792959 0 -2.432846 -2.712667 0 -2.432846 -2.997144 0 -2.717323 -2.997144 0 -2.717323 -2.712667 0 -1.798719 -2.997144 0 -1.80027 -2.611145 0 -1.544153 -2.661534 0 -1.613537 -2.975048 0 -1.042638 -2.506796 0 -0.9549148 -2.58655 0 -1.590793 -2.703421 0 -1.599813 -2.597042 0 -0.9467058 -2.279803 0 -1.057764 -2.232511 0 -0.9693053 -1.886724 0 -0.8716216 -1.957635 0 -0.721026 -1.806065 0 -0.8187096 -1.735154 0 -0.5985462 -1.624771 0 -0.5686649 -1.72342 0 -0.3148907 -1.691111 0 -0.3237052 -1.588414 0 0.2682083 -1.593619 0 0.2649812 -1.696644 0 0.8747937 -1.680644 0 0.8767944 -1.577589 0 1.18782 -1.632489 0 1.166622 -1.73336 0 1.330322 -1.860593 0 1.394225 -1.779718 0 1.513128 -2.112973 0 1.43478 -2.179951 0 1.635694 -2.225333 0 1.657275 -2.13797 0 1.939043 -2.154991 0 1.94144 -2.244948 0 2.340798 -2.264902 0 2.338401 -2.174944 0 2.754818 -2.168853 0 2.756948 -2.248813 0 -1.206396 -3.693984 0 -1.242343 -3.305619 0 -0.9171342 -3.205118 0 -0.8811868 -3.693984 0 -0.6812345 -3.693984 0 -0.7434448 -3.037118 0 -0.7383674 -2.927353 0 -0.6523781 -3.693984 0 -0.1790015 -3.693984 0 -0.09856939 -2.927353 0 -0.09856939 -3.691248 0 -0.1790015 -3.693984 0 -0.7580987 -3.693984 0 -0.8068947 -3.140762 0 0.7524387 -2.329295 0 0.7524387 -2.447259 0 0.3467438 -2.447259 0 0.3467439 -2.329295 0 1.577545 -2.752331 0 1.577544 -2.972005 0 2.333035 -2.972005 0 2.333035 -2.752331 0 1.771814 -2.75233 0 1.771813 -2.972004 0 1.771814 -3.712126 0 1.577545 -3.712126 0 3.951357 -3.045188 0 3.951357 -3.205911 0 3.790634 -3.205911 0 3.790634 -3.045188 0 3.777705 -3.442339 0 3.898986 -3.488265 0 3.780023 -3.678587 0 3.706417 -3.550935 0 3.542202 -3.61772 0 3.542207 -3.698102 0 3.378891 -3.698101 0 3.378889 -3.654726 0 3.088667 -3.677164 0 3.08867 -3.720538 0 3.94161 -2.937349 0 4.700185 -2.989817 0 4.688364 -3.094575 0 2.325978 -0.4645422 0 3.062444 -1.639505 0 1.736639 -1.652815 0 1.306294 -0.4024304 0 2.775359 -0.9950673 0 1.574049 -1.019158 0 0.9071626 -0.5314515 0 0.579327 -1.177676 0 0.4332741 -0.8970103 0 0.6196009 -0.4865101 0 -0.448527 -0.9001848 0 -0.5793023 -1.191498 0 -0.8588411 -0.5139837 0 -0.5364156 -0.5953239 0 -0.5032334 -0.4637925 0 -0.8256589 -0.3824523 0 -0.07356953 -0.4748727 0 -0.1067517 -0.6064042 0 0.6172476 -0.3852923 0 1.016605 -0.3982919 0 0.3327626 -0.412706 0 0.3351159 -0.5139238 0 0.1284559 0.4229251 0 0.1195832 -0.1656165 0 -0.03440529 -0.1656165 0 -0.02553254 0.4229252 0 -0.02553248 0.4983428 0 0.1284559 0.4983427 0 -0.9660345 0.4273625 0 -0.9660346 0.3519449 0 -1.649229 0.2765285 0 -1.649229 0.3519461 0 -1.98222 0.2754044 0 -1.963942 0.2022351 0 -2.095979 0.140418 0 -2.114257 0.2135873 0 0.5046501 0.5387291 0 0.4709416 0.471264 0 0.601417 0.1935352 0 0.6563932 0.2451631 0 0.6836101 0.01580512 0 0.6108887 -0.08462196 0 1.128239 0.05076974 0 1.032381 0.1157065 0 0.9081647 0.5282819 0 1.004022 0.4633452 0 1.342231 0.4574895 0 1.324126 0.5430101 0 2.179096 0.6201056 0 2.197201 0.534585 0 2.970942 0.6758541 0 2.957273 0.7436295 0 3.427577 0.7477982 0 3.405755 0.6578413 0 3.504639 0.585451 0 3.530896 0.773004 0 3.442964 0.2950721 0 3.320937 0.3063682 0 3.321022 -0.4169872 0 3.405235 -0.4247828 0 3.525173 -0.979489 0 3.440961 -0.9716934 0 3.439448 -1.354546 0 3.523661 -1.362342 0 3.592203 -1.708884 0 3.398424 -1.697669 0 3.38587 -1.914572 0 3.579649 -1.925788 0 3.575343 -2.000183 0 3.381565 -1.988968 0 3.154724 -1.975839 0 3.159029 -1.901443 0 3.351177 -2.118355 0 3.496317 -2.126755 0 3.501425 -2.376647 0 3.356286 -2.368247 0 3.349873 -2.465215 0 3.505964 -2.474249 0 4.128167 -2.50608 0 4.13354 -2.413231 0 3.540178 -2.644619 0 3.326344 -2.632244 0 3.273243 -2.718665 0 3.59285 -2.758829 0 2.83406 -2.767463 0 3.606729 -2.913052 0 3.287122 -2.957175 0 2.918918 -2.983793 0 4.035559 -0.3830261 0 4.035088 -0.4705886 0 3.401888 -0.467179 0 3.40236 -0.3796164 0 4.533252 -0.395078 0 4.482844 -0.3234783 0 4.5927 -0.2461379 0 4.643107 -0.3177375 0 3.947093 -0.8835095 0 3.943397 -0.9874381 0 3.73063 -0.9874381 0 3.667789 -0.8835095 0 4.315746 -0.9874381 0 4.299266 -0.8586272 0 4.587733 -0.7967826 0 4.593123 -0.9874381 0 4.831644 -0.9874381 0 4.822557 -0.7145435 0 4.934523 -0.5539914 0 4.939912 -0.9874381 0 3.503693 -1.619547 0 3.509083 -1.064115 0 3.621048 -1.346652 0 3.611962 -1.619547 0 3.850482 -1.619547 0 3.855872 -1.428892 0 4.144339 -1.490736 0 4.12786 -1.619547 0 4.775816 -1.515619 0 4.720369 -1.619547 0 4.500209 -1.619547 0 4.496513 -1.515619 0 4.947429 -1.969228 0 4.947429 -2.052612 0 4.515726 -2.11915 0 4.497243 -2.009891 0 3.820776 -1.995104 0 3.817079 -2.126543 0</float_array>
+          <technique_common>
+            <accessor source="#ground-mesh-positions-array" count="319" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="ground-mesh-normals">
+          <float_array id="ground-mesh-normals-array" count="405">0 0 1 0 0 1 0 0 1 0 0 0 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 -1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 -1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 1 0 0 1</float_array>
+          <technique_common>
+            <accessor source="#ground-mesh-normals-array" count="135" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="ground-mesh-vertices">
+          <input semantic="POSITION" source="#ground-mesh-positions"/>
+        </vertices>
+        <polylist material="ground1" count="135">
+          <input semantic="VERTEX" source="#ground-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#ground-mesh-normals" offset="1"/>
+          <vcount>4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 3 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 </vcount>
+          <p>1 0 2 0 4 0 5 0 5 1 4 1 7 1 6 1 6 2 7 2 8 2 9 2 9 3 8 3 11 3 10 3 12 4 17 4 16 4 13 4 17 5 14 5 15 5 16 5 11 6 18 6 19 6 10 6 18 7 12 7 13 7 19 7 23 8 22 8 25 8 24 8 23 9 20 9 27 9 24 9 21 10 20 10 27 10 26 10 22 11 21 11 26 11 25 11 30 12 29 12 28 12 31 12 28 13 29 13 32 13 33 13 33 14 32 14 35 14 34 14 38 15 37 15 36 15 39 15 38 16 39 16 40 16 41 16 41 17 40 17 43 17 42 17 46 18 47 18 44 18 45 18 51 19 50 19 49 19 48 19 0 20 3 20 2 20 1 20 52 21 53 21 54 21 55 21 55 22 54 22 57 22 56 22 59 23 58 23 61 23 60 23 64 24 63 24 62 24 65 24 68 25 67 25 66 25 69 25 71 26 72 26 73 26 70 26 76 27 75 27 74 27 77 27 79 28 84 28 83 28 78 28 84 29 80 29 81 29 83 29 80 30 84 30 85 30 82 30 82 31 85 31 86 31 87 31 87 32 86 32 89 32 88 32 92 33 91 33 90 33 93 33 90 34 91 34 94 34 95 34 95 35 94 35 97 35 96 35 100 36 99 36 98 36 101 36 98 37 99 37 102 37 103 37 98 38 103 38 104 38 105 38 105 39 104 39 107 39 106 39 105 40 106 40 108 40 109 40 112 41 111 41 110 41 113 41 110 42 111 42 114 42 115 42 56 43 57 43 115 43 116 43 114 44 117 44 116 44 115 44 120 45 119 45 118 45 121 45 118 46 119 46 122 46 123 46 123 47 122 47 125 47 124 47 124 48 125 48 126 48 127 48 127 49 126 49 129 49 128 49 128 50 129 50 130 50 131 50 131 51 130 51 133 51 132 51 132 52 133 52 134 52 135 52 135 53 134 53 137 53 136 53 136 54 137 54 138 54 139 54 139 55 138 55 141 55 140 55 140 56 141 56 142 56 143 56 143 57 142 57 145 57 144 57 144 58 145 58 146 58 147 58 147 59 146 59 149 59 148 59 97 60 150 60 151 60 96 60 151 61 150 61 153 61 152 61 155 62 154 62 157 62 156 62 156 63 157 63 158 63 159 63 159 64 158 64 161 64 160 64 153 65 162 65 163 65 152 65 162 66 154 66 155 66 163 66 166 67 165 67 164 67 167 67 169 68 173 68 172 68 168 68 173 69 170 69 171 69 172 69 173 70 169 70 175 70 174 70 178 71 177 71 176 71 179 71 177 72 178 72 180 72 181 72 181 73 180 73 183 73 182 73 182 74 183 74 184 74 185 74 185 75 184 75 187 75 186 75 186 76 187 76 188 76 189 76 176 77 190 77 179 77 190 78 176 78 192 78 191 78 194 79 197 79 198 79 195 79 197 80 193 80 196 80 198 80 201 81 200 81 199 81 202 81 200 82 201 82 203 82 204 82 204 83 203 83 206 83 205 83 205 84 206 84 207 84 208 84 207 85 206 85 210 85 209 85 202 86 199 86 212 86 211 86 202 87 211 87 213 87 214 87 217 88 216 88 215 88 218 88 218 89 215 89 220 89 219 89 218 90 219 90 221 90 222 90 222 91 221 91 224 91 223 91 223 92 224 92 225 92 226 92 226 93 225 93 228 93 227 93 220 94 215 94 230 94 229 94 229 95 230 95 231 95 232 95 232 96 231 96 234 96 233 96 233 97 234 97 235 97 236 97 236 98 235 98 238 98 237 98 237 99 238 99 239 99 240 99 240 100 239 100 242 100 241 100 241 101 242 101 243 101 244 101 244 102 243 102 246 102 245 102 245 103 246 103 247 103 248 103 247 104 246 104 250 104 249 104 249 105 250 105 251 105 252 105 252 106 251 106 254 106 253 106 253 107 254 107 255 107 256 107 256 108 255 108 258 108 257 108 257 109 258 109 259 109 260 109 260 110 259 110 262 110 261 110 262 111 259 111 264 111 263 111 261 112 262 112 265 112 266 112 266 113 265 113 268 113 267 113 267 114 268 114 269 114 270 114 267 115 270 115 271 115 272 115 270 116 269 116 274 116 273 116 273 117 274 117 275 117 276 117 276 118 275 118 279 118 278 118 275 119 277 119 280 119 279 119 283 120 282 120 281 120 284 120 281 121 282 121 285 121 286 121 286 122 285 122 288 122 287 122 291 123 290 123 289 123 292 123 289 124 290 124 293 124 294 124 294 125 293 125 296 125 295 125 295 126 296 126 297 126 298 126 298 127 297 127 300 127 299 127 303 128 304 128 301 128 302 128 306 129 305 129 304 129 303 129 307 130 308 130 305 130 306 130 312 131 311 131 308 131 307 131 310 132 311 132 312 132 309 132 315 133 314 133 313 133 316 133 315 134 316 134 317 134 318 134</p>
+        </polylist>
+      </mesh>
+      <extra><technique profile="MAYA"><double_sided>1</double_sided></technique></extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="Scene" name="Scene">
+      <node id="world_size" type="NODE">
+        <translate sid="location">0 0 -10</translate>
+        <rotate sid="rotationZ">0 0 1 0</rotate>
+        <rotate sid="rotationY">0 1 0 0</rotate>
+        <rotate sid="rotationX">1 0 0 0</rotate>
+        <scale sid="scale">0.1 0.1 0.1</scale>
+      </node>
+      <node id="candle_005" type="NODE">
+        <translate sid="location">-4.620488 2.535198 1</translate>
+        <rotate sid="rotationZ">0 0 1 0</rotate>
+        <rotate sid="rotationY">0 1 0 0</rotate>
+        <rotate sid="rotationX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+      </node>
+      <node id="candle_004" type="NODE">
+        <translate sid="location">0.6917369 2.31253 1</translate>
+        <rotate sid="rotationZ">0 0 1 0</rotate>
+        <rotate sid="rotationY">0 1 0 0</rotate>
+        <rotate sid="rotationX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+      </node>
+      <node id="candle_003" type="NODE">
+        <translate sid="location">3.920425 3.425871 1</translate>
+        <rotate sid="rotationZ">0 0 1 0</rotate>
+        <rotate sid="rotationY">0 1 0 0</rotate>
+        <rotate sid="rotationX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+      </node>
+      <node id="candle_002" type="NODE">
+        <translate sid="location">3.713661 -0.009579867 1</translate>
+        <rotate sid="rotationZ">0 0 1 0</rotate>
+        <rotate sid="rotationY">0 1 0 0</rotate>
+        <rotate sid="rotationX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+      </node>
+      <node id="candle_001" type="NODE">
+        <translate sid="location">0.3655224 0.2952084 1</translate>
+        <rotate sid="rotationZ">0 0 1 0</rotate>
+        <rotate sid="rotationY">0 1 0 0</rotate>
+        <rotate sid="rotationX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+      </node>
+      <node id="no-oxygen" type="NODE">
+        <translate sid="location">0 0 -2</translate>
+        <rotate sid="rotationZ">0 0 1 0</rotate>
+        <rotate sid="rotationY">0 1 0 0</rotate>
+        <rotate sid="rotationX">1 0 0 0</rotate>
+        <scale sid="scale">0.9999316 1 1</scale>
+        <instance_geometry url="#no-oxygen-mesh">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="no-oxygen1" target="#no-oxygen-material"/>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+      <node id="water" type="NODE">
+        <translate sid="location">0 0 -1</translate>
+        <rotate sid="rotationZ">0 0 1 0</rotate>
+        <rotate sid="rotationY">0 1 0 0</rotate>
+        <rotate sid="rotationX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+        <instance_geometry url="#water-mesh">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="water1" target="#water-material"/>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+      <node id="candle_000" type="NODE">
+        <translate sid="location">-4.620488 0.8969972 1</translate>
+        <rotate sid="rotationZ">0 0 1 0</rotate>
+        <rotate sid="rotationY">0 1 0 0</rotate>
+        <rotate sid="rotationX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+      </node>
+      <node id="start" type="NODE">
+        <translate sid="location">-4.445383 2.131876 2</translate>
+        <rotate sid="rotationZ">0 0 1 0</rotate>
+        <rotate sid="rotationY">0 1 0 0</rotate>
+        <rotate sid="rotationX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+      </node>
+      <node id="Sun" type="NODE">
+        <translate sid="location">0 0 20</translate>
+        <rotate sid="rotationZ">0 0 1 0</rotate>
+        <rotate sid="rotationY">0 1 0 0</rotate>
+        <rotate sid="rotationX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+        <instance_light url="#Sun-light"/>
+      </node>
+      <node id="ground" type="NODE">
+        <translate sid="location">0 0 0</translate>
+        <rotate sid="rotationZ">0 0 1 0</rotate>
+        <rotate sid="rotationY">0 1 0 0</rotate>
+        <rotate sid="rotationX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+        <instance_geometry url="#ground-mesh">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="ground1" target="#ground-material"/>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+      <node id="Camera" type="NODE">
+        <translate sid="location">0 0 100</translate>
+        <rotate sid="rotationZ">0 0 1 0</rotate>
+        <rotate sid="rotationY">0 1 0 0</rotate>
+        <rotate sid="rotationX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+        <instance_camera url="#Camera-camera"/>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#Scene"/>
+  </scene>
+</COLLADA>
+      
+      </textarea>
     </div>
   </section>
 
+  <section>
+    <h2>Step 3 - Define your needs</h2>
+   
+    <em>This is static for now - TODO</em>
+
+    <h3>Game scale</h3>
+    <div>
+      <input type="checkbox" id="usecamera" checked="checked" />
+      <label for="usecamera">normalize with the camera</label>
+    </div>
+    <div>
+      <input type="checkbox" id="gamescale" checked="checked" />
+      <label for="gamescale">use this object scale : </label>
+      <input type="text" name="galescale_name" value="world_size" />
+    </div>
+
+    <h3>Objects</h3>
+    <div>
+      <ul class="extractors">
+        <li>
+          <a href="#" class="clone">+</a>
+          <input type="text" name="destination" placeholder="name" />
+          =
+          select
+          <select name="map">
+            <option value="position">position</option>
+            <option value="polygons">polygons</option>
+            <option value="js">map function</option>
+          </select>
+          <input type="text" name="map_value" />
+
+          where
+          <select name="filter">
+            <option value="z_is">z=</option>
+            <option value="name_is">name=</option>
+            <option value="js">filter function</option>
+          </select>
+          <input type="text" name="filter_value" />
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Step 4 - get your json map</h2>
+    <div>
+      <textarea id="json" name="" rows="18" cols="30" readonly></textarea>
+    </div>
+
+    <h3>Preview</h3>
+  	<div id="viewport"></div>
+    <div id="legend"></div>
+  </section>
+
+  </div>
+
 
 <script type="text/javascript">
-$('#collada').submit(function(e){
+$('.extractors .delete').live("click", function (e) {
   e.preventDefault();
+  var li = $(this).parents("li:first");
+  li.remove();
+});
+$('.extractors .clone').live("click", function (e) {
+  e.preventDefault();
+  var li = $(this).parents("li:first");
+  var l = li.clone();
+  l.find(".clone").removeClass("clone").addClass("delete").text("-");
+  li.parent().append(l);
+});
+
+(function(){
+ var li = $('.extractors li:first');
+
+ function fill (l, name, map, mapValue, filter, filterValue) {
+   l.find("[name=destination]").val(name);
+   l.find("[name=map] option[value="+map+"]").attr("selected", "selected");
+   l.find("[name=map_value]").val(mapValue);
+   l.find("[name=filter] option[value="+filter+"]").attr("selected", "selected");
+   l.find("[name=filter_value]").val(filterValue);
+  return l;
+ }
+
+ function newExtractor (name, map, mapValue, filter, filterValue) {
+   var l = li.clone();
+   l.find(".clone").removeClass("clone").addClass("delete").text("-");
+   fill(l, name, map, mapValue, filter, filterValue);
+   return l;
+ }
+
+ fill(li, "start", "position", "", "z_is", "2");
+ li.parent().append(newExtractor("candles", "position", "", "z_is", "1"));
+ li.parent().append(newExtractor("grounds", "polygons", "", "z_is", "0"));
+ li.parent().append(newExtractor("waters", "polygons", "", "z_is", "-1"));
+ li.parent().append(newExtractor("noOxygens", "polygons", "", "z_is", "-2"));
+
+}());
+
+var a = 0;
+function randomColor (i, o) {
+  if (i===undefined) i = 50;
+  if (o===undefined) o = 1;
+  var v = 255*a/360;
+  a += 137.5;
+  if (a > 360) a -= 360;
+  return 'hsla('+v+',80%,'+i+'%,'+o+')';
+}
+
+function addLegend (color, name, polygon) {
+  var span;
+  if (polygon) {
+    span = '<span class="color" style="background-color: '+color+'"></span>';
+  }
+  else {
+    span = '<span class="color" style="color: '+color+'">+</span>';
+  }
+  $('#legend').append('<p>'+span+' '+name+'</p>');
+}
+
+function draw (map) {
+  var container = $('#viewport').empty();
+  var w = 500;
+  var h = Math.floor(w * map.height/map.width);
+  var CROSS_SIZE = 3;
+  var canvas = $('<canvas width="'+w+'" height="'+h+'"></canvas>');
+  var ctx = canvas[0].getContext("2d");
+  for (var name in map) {
+    var objs = map[name];
+    if (objs[0] && objs[0].faces) {
+      var color = randomColor(70, 0.5);
+      ctx.fillStyle = color;
+      ctx.strokeStyle = color;
+      for (var i=0; i<objs.length; ++i) {
+        var obj = objs[i];
+        for (var f=0; f<obj.faces.length; ++f) {
+          var face = obj.faces[f];
+          ctx.beginPath();
+          for (var v=0; v<face.length; ++v) {
+            var vertice = obj.vertices[face[v]];
+            var x = ctx.canvas.width*vertice.x/map.width;
+            var y = ctx.canvas.height*(1-vertice.y/map.height);
+            if (v==0)
+              ctx.moveTo(x, y);
+            else
+              ctx.lineTo(x, y);
+          }
+          ctx.fill();
+        }
+      }
+      addLegend(color, name, true);
+    }
+  }
+  for (var name in map) {
+    var objs = map[name];
+    if (objs[0] && objs[0].x) {
+      var color = randomColor(50);
+      ctx.fillStyle = color;
+      ctx.strokeStyle = color;
+      for (var i=0; i<objs.length; ++i) {
+        var p = objs[i];
+        var x = ctx.canvas.width*p.x/map.width;
+        var y = ctx.canvas.height*(1-p.y/map.height);
+        ctx.beginPath();
+        ctx.moveTo(x-CROSS_SIZE, y);
+        ctx.lineTo(x+CROSS_SIZE, y);
+        ctx.moveTo(x, y-CROSS_SIZE);
+        ctx.lineTo(x, y+CROSS_SIZE);
+        ctx.stroke();
+      }
+      addLegend(color, name, false);
+    }
+  }
+  container.append(canvas);
+}
+
+function convert () {
   var converter = new Converter($('#collada_text').val());
   var result = converter.convert();
   $("#json").text(JSON.stringify(result));
+  draw(result);
+}
+
+function tryConvert () {
+  try {
+    convert();
+  }
+  catch (e) {
+  }
+}
+
+tryConvert();
+
+
+$('#json').focus(function(e){
+  e.preventDefault();
+  tryConvert();
+  $(this).select();
 });
+
+$('#collada_text').change(tryConvert);
+
+
 </script>
 </body>
 </html>
