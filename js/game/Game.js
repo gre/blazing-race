@@ -141,7 +141,7 @@
     }
     
     function drawBackground (ctx) {
-      ctx.fillStyle = 'rgb(10, 10, 10)';
+      ctx.fillStyle = 'rgb(20, 20, 20)';
       ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     }
 
