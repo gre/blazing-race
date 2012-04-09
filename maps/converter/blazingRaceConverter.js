@@ -48,7 +48,6 @@ function Converter (collada) {
           };
         }, null).
         value();
-        console.log(boundingBox);
       return true;
     }
 
@@ -74,7 +73,6 @@ function Converter (collada) {
           y: Math.max(topleft.y, bottomright.y)
         }
       };
-      console.log(boundingBox);
       return true;
     }
 
@@ -89,6 +87,19 @@ function Converter (collada) {
 
     function setStart (node) {
       map.start = [{ x: node.position.x, y: node.position.y }];
+    }
+
+    /*
+     Return area of a simple (ie. non-self-intersecting) polygon.
+     Will be negative for counterclockwise winding.
+     */
+    function poly_area (verts) {
+      var accum = 0.0;
+      for (var i = 0; i < verts.length; ++ i) {
+        var j = (i + 1) % verts.length
+        accum += verts[j].x * verts[i].y - verts[i].x * verts[j].y
+      }
+      return accum / 2
     }
 
     function mapVerticesAndFaces (node) {
@@ -107,6 +118,13 @@ function Converter (collada) {
             p.push(f.c);
           if (f.d !== undefined)
             p.push(f.d);
+
+          // reverse if clockwise
+          if (poly_area(_(p).map(function (f) {
+            return g.vertices[f].position
+          })) >= 0) {
+            p.reverse();
+          }
           return p;
         })
       }

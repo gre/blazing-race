@@ -10,7 +10,7 @@
     var world = game.world;
     var self = this;
     self.size = 0.5;
-    self.body = world.createPlayerBody(self.size, _x/DRAW_SCALE, _y/DRAW_SCALE);
+    self.body = world.createPlayerBody(self.size, _x, _y);
 
     self.E = makeEvent({});
 
@@ -123,13 +123,13 @@
     // RENDERING
     var coal;
 
-    function drawPlayer (ctx) {
+    function drawPlayer (ctx, camera) {
+      ctx.save();
       if (self.isDead()) {
         pe.duration = 0;
       }
-      var p = self.getPosition();
-      ctx.save();
-      ctx.translate(p.x*DRAW_SCALE, p.y*DRAW_SCALE);
+      var p = camera.realPositionToCanvas(self.getPosition());
+      ctx.translate(p.x, p.y);
       ctx.rotate(self.body.GetAngle());
       var playerBg = ctx.createPattern(coal, "repeat");
       ctx.fillStyle = playerBg;
@@ -146,9 +146,9 @@
 
     var lastEmit = 0;
     // TODO : clip to space around
-    function drawFlame (ctx) {
-      var p = self.getPosition();
+    function drawFlame (ctx, camera) {
       ctx.save();
+      var p = self.getPosition();
       ctx.globalCompositeOperation = "lighter";
 
       var now = +new Date();
@@ -156,19 +156,22 @@
         pe.update(Math.min(1/self.power, 10));
         lastEmit = now;
       }
-      pe.position.x = p.x*DRAW_SCALE - 11;
-      pe.position.y = p.y*DRAW_SCALE - 8;
+      // this is hacky... FIXME
+      p = camera.realPositionToCanvas(p);
+      pe.position.x = p.x-11-camera.x;
+      pe.position.y = p.y-8+camera.y;
+      ctx.translate(camera.x, -camera.y);
       pe.renderParticles(ctx);
-      
       ctx.restore();
     }
     
     var POWER_CIRCLE_OPEN = 0.05 * Math.PI;
     var POWER_CURSOR_SIZE = 10;
     var POWER_CIRCLE_LINEWIDTH = 5;
-    var POWER_CIRCLE_COLOR = 'rgba(150,130,60,0.5)';
-    function drawPowerCircle (ctx) {
-      var pos = self.getPosition();
+    var POWER_CIRCLE_COLOR = 'rgba(60,60,60,0.5)';
+    function drawPowerCircle (ctx, camera) {
+      //var pos = self.getPosition();
+      var pos = camera.realPositionToCanvas(self.getPosition());
       var mouseP = self.controls.getCursorPosition && self.controls.getCursorPosition();
       var power = self.power;
       var powerDist = power * self.MAX_DIST;
@@ -179,7 +182,7 @@
         p = self.getVector(self.camera.canvasToRealPosition(mouseP));
         dist = p.Normalize();
         intensity = Math.min(self.getIntensity(dist), self.power);
-        fromAngle = Math.atan2(p.y, p.x) + POWER_CIRCLE_OPEN/2;
+        fromAngle = Math.atan2(-p.y, p.x) + POWER_CIRCLE_OPEN/2;
         toAngle = fromAngle + 2*Math.PI - POWER_CIRCLE_OPEN;
       }
       else {
@@ -192,7 +195,7 @@
       ctx.save();
       ctx.strokeStyle = POWER_CIRCLE_COLOR;
       ctx.fillStyle = POWER_CIRCLE_COLOR;
-      ctx.translate(pos.x*DRAW_SCALE, pos.y*DRAW_SCALE);
+      ctx.translate(pos.x, pos.y);
       ctx.beginPath();
       ctx.lineWidth = intensity * POWER_CIRCLE_LINEWIDTH;
       ctx.arc(0, 0, intensityDist*DRAW_SCALE, fromAngle, toAngle);
@@ -200,7 +203,7 @@
 
       if (p) {
         ctx.beginPath();
-        ctx.arc(intensityDist*p.x*DRAW_SCALE, intensityDist*p.y*DRAW_SCALE, intensity*POWER_CURSOR_SIZE, 0, 2*Math.PI);
+        ctx.arc(intensityDist*p.x*DRAW_SCALE, -intensityDist*p.y*DRAW_SCALE, intensity*POWER_CURSOR_SIZE, 0, 2*Math.PI);
         ctx.fill();
       }
 
@@ -211,11 +214,13 @@
       coal = loader.getResource("coal");
     }
 
-    self.render = function (ctx) {
+    self.render = function (ctx, camera) {
+      ctx.save();
       if (self.controls.isActive())
-        drawPowerCircle(ctx);
-      drawPlayer(ctx);
-      drawFlame(ctx);
+        drawPowerCircle(ctx, camera);
+      drawPlayer(ctx, camera);
+      drawFlame(ctx, camera);
+      ctx.restore();
     }
   }
 
