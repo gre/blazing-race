@@ -115,15 +115,15 @@
       currentCount = seconds;
       if (seconds>0) {
         $end.fadeIn();
-        $end.find(".countdown").remove();
-        $end.append('<div class="countdown">'+seconds+'</div>');
+        $end.find(".value").remove();
+        $end.append('<div class="value">'+seconds+'</div>');
         setTimeout(function(){
-          $end.find(".countdown").addClass("change");
+          $end.find(".value").addClass("change");
         }, 100);
       }
       else if (seconds<=0) {
         $end.find(".message").empty();
-        $end.find(".countdown").empty();
+        $end.find(".value").empty();
         $end.hide();
       }
     }
@@ -142,6 +142,8 @@
     }
 
     this.start = function () {
+
+      $end.show().find(".message").text("Ready?");
 
       setup();
       requestAnimFrame(function loop () {

@@ -149,8 +149,8 @@
 
 
     self.setup = function (loader) {
-      candleOn = loader.getResource("candle-on");
-      candleOff = loader.getResource("candle-off");
+      candleOn = loader.getResource("candleOn");
+      candleOff = loader.getResource("candleOff");
       self.world.setup(loader);
       self.player.setup(loader);
     }

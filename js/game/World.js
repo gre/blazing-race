@@ -115,7 +115,7 @@
     var mapTexture;
 
     self.setup = function (loader) {
-      mapTexture = loader.getResource("maps_01");
+      mapTexture = loader.getResource("map");
     }
 
     self.render = function (ctx, camera) {

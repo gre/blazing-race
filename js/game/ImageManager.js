@@ -1,31 +1,39 @@
 (function(ns){
   // TODO : setResource , a { name: path, name: path } would be better
-   ns.ImageManager =  function (images, dir, ext) {
+   ns.ImageManager =  function (images) {
     var self = this;
     var count = 0;
     var onloaded = function () {};
-    dir = dir || "";
-    ext = ext || "";
 
     var resources = {};
 
-    for (var i = 0; i<images.length; ++i) {
-      var name = images[i];
-      var imgSrc = dir+name+ext;
+    var nb = 0;
+    for (var name in images) { ++ nb }
+
+    for (var name in images) {
       var img = new Image();
       img.onload = function () {
-        if (++count == images.length)
+        ++ count;
+        if (self.isReady())
           onloaded();
       }
-      img.src = imgSrc;
+      img.src = images[name];
       resources[name] = img;
     }
 
+    self.isReady = function () {
+      return count == nb;
+    }
+
     self.ready = function (callback) {
-      if (count==images.length)
+      if (self.isReady())
         callback();
       else
         onloaded = callback;
+    }
+
+    self.progress = function () {
+      return count / nb;
     }
 
     self.getResource = function (name) {

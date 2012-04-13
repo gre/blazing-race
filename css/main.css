@@ -65,7 +65,7 @@ a:hover {
   display: block;
   top: 40%;
 }
-#game .countdown {
+#game .value {
   font-weight: bold;
   font-size: 6em;
   transition: 800ms;
@@ -73,7 +73,7 @@ a:hover {
   transform: scale(1);
   -moz-transform: scale(1);
 }
-#game .countdown.change {
+#game .value.change {
   transform: scale(0.7);
   -moz-transform: scale(0.7);
 }

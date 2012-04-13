@@ -21,18 +21,28 @@ $(function(){
   var isMobile = /ipad|iphone|android/i.test(navigator.userAgent);
   var node = $("#game");
 
-  $.getJSON("maps/01.json", function (map) {
+  var level = "poc";
+
+  $.getJSON("maps/"+level+".json", function (map) {
     var W = node.width();
     var H = node.height();
 
-    var loader = new ImageManager([
-      "maps_01",
-      "coal",
-      "candle-off",
-      "candle-on"
-      ], "images/", ".png");
+    var loader = new ImageManager({
+      map: "maps/"+level+".png",
+      coal: "images/coal.png",
+      candleOff: "images/candle-off.png",
+      candleOn: "images/candle-on.png"
+    });
+
+    var loadInterval = setInterval(function() {
+      $('.front .value').text(Math.floor(loader.progress()*100)+"%");
+    }, 100);
+    
+    $('canvas').hide();
 
     loader.ready(function(){
+      clearInterval(loadInterval);
+      $('canvas').show();
 
       // FIXME : some constructor should not depends on other components, try to avoid almost all dependencies and use loosely coupled events
       // TODO new Map(map);
