@@ -18,7 +18,6 @@ $(function(){
   ;
 
 (function main () {
-  window.DRAW_SCALE = 30; // TODO : remove and put somewhere (probably camera)
   var isMobile = /ipad|iphone|android/i.test(navigator.userAgent);
   var node = $("#game");
 

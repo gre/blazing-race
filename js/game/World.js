@@ -9,7 +9,6 @@
   ,	b2BodyDef = Box2D.Dynamics.b2BodyDef
   ,	b2Body = Box2D.Dynamics.b2Body
   ,	b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape
-  ,	b2CircleShape = Box2D.Collision.Shapes.b2CircleShape
   ;
 
 
@@ -107,23 +106,6 @@
       self.world.ClearForces();
     }
 
-    self.createPlayerBody = function (size, x, y) {
-      var bodyDef = new b2BodyDef;
-      bodyDef.type = b2Body.b2_dynamicBody;
-      bodyDef.position.x = x;
-      bodyDef.position.y = y;
-      //bodyDef.angularDamping = 0.2;
-      var player = self.world.CreateBody(bodyDef);
-      var fixDef = new b2FixtureDef;
-      fixDef.density = 1.0;
-      fixDef.friction = 0.2;
-      fixDef.restitution = 0.1;
-      fixDef.shape = new b2CircleShape(size);
-      player.CreateFixture(fixDef);
-      player.SetUserData({ type: "player" });
-      return player;
-    }
-
     self.update = update;
     self.start = function () {
       init(self.world);
@@ -139,19 +121,21 @@
     self.render = function (ctx, camera) {
       ctx.save();
       // drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh)
-      var scalex = (DRAW_SCALE*(self.width / mapTexture.width));
-      var scaley = (DRAW_SCALE*(self.height / mapTexture.height));
-      ctx.drawImage(
-          mapTexture, 
-          -camera.x/scalex,
-          (DRAW_SCALE*self.height+camera.y-camera.height)/scaley,
-          camera.width/scalex, 
-          camera.height/scaley, 
-          0, 
-          0, 
-          camera.width, 
-          camera.height
-      );
+      var scalex = (camera.scale*(self.width / mapTexture.width));
+      var scaley = (camera.scale*(self.height / mapTexture.height));
+      var sx = -camera.x/scalex;
+      var sy = (camera.scale*self.height+camera.y-camera.height)/scaley;
+      var sw = camera.width/scalex;
+      var sh = camera.height/scaley;
+      var dx = 0;
+      var dy = 0;
+      var dw = camera.width;
+      var dh = camera.height;
+      sx = Math.floor(sx);
+      sy = Math.floor(sy);
+      sw = Math.floor(sw);
+      sh = Math.floor(sh);
+      ctx.drawImage(mapTexture, sx, sy, sw, sh, dx, dy, dw, dh);
       ctx.restore();
     }
     

@@ -6,13 +6,14 @@
 
   var b2Vec2 = Box2D.Common.Math.b2Vec2;
 
-  ns.Camera = function (world, width, height) {
+  ns.Camera = function (world, _width, _height, _scale) {
     var self = this;
     // non normalized position
     self.x = 0;
     self.y = 0;
-    self.width = width;
-    self.height = height;
+    self.width = _width;
+    self.height = _height;
+    self.scale = _scale || 30;
 
     self.resize = function (w, h) {
       self.width = w;
@@ -27,15 +28,15 @@
 
     self.canvasToRealPosition = function (p) {
       return new b2Vec2(
-        (-self.x + p.x)/DRAW_SCALE,
-        (-self.y + self.height - p.y)/DRAW_SCALE
+        (-self.x + p.x)/self.scale,
+        (-self.y + self.height - p.y)/self.scale
       )
     }
 
     self.realPositionToCanvas = function (p) {
       return new b2Vec2(
-        self.x + DRAW_SCALE*p.x,
-        -self.y -DRAW_SCALE*(p.y)+self.height
+        self.x + self.scale*p.x,
+        -self.y -self.scale*(p.y)+self.height
       )
     }
 
@@ -79,24 +80,24 @@
     // Move the camera centered to the position v
     self.focusOn = function (v) {
       var x, y;
-      if (DRAW_SCALE*world.width > self.width) {
-        if (v.x*DRAW_SCALE < (DRAW_SCALE*world.width - self.width/2) && v.x*DRAW_SCALE > self.width/2) {
-          x = -(v.x*DRAW_SCALE)+(self.width/2);
+      if (self.scale*world.width > self.width) {
+        if (v.x*self.scale < (self.scale*world.width - self.width/2) && v.x*self.scale > self.width/2) {
+          x = -(v.x*self.scale)+(self.width/2);
         }
-        else if(v.x*DRAW_SCALE >= (DRAW_SCALE*world.width-self.width/2)) {
-          x = self.width-DRAW_SCALE*world.width;
+        else if(v.x*self.scale >= (self.scale*world.width-self.width/2)) {
+          x = self.width-self.scale*world.width;
         }
         else {
           x = 0;
         }
         self.x = x;
       }
-      if(DRAW_SCALE*world.height > self.height) {
-        if(v.y*DRAW_SCALE < (DRAW_SCALE*world.height - self.height/2) && v.y*DRAW_SCALE > self.height/2) {
-          y = -(v.y*DRAW_SCALE)+(self.height/2);
+      if(self.scale*world.height > self.height) {
+        if(v.y*self.scale < (self.scale*world.height - self.height/2) && v.y*self.scale > self.height/2) {
+          y = -(v.y*self.scale)+(self.height/2);
         }
-        else if(v.y*DRAW_SCALE >= (DRAW_SCALE*world.height - self.height/2)) {
-          y = (self.height - DRAW_SCALE*world.height);
+        else if(v.y*self.scale >= (self.scale*world.height - self.height/2)) {
+          y = (self.height - self.scale*world.height);
         }
         else {
           y = 0;
