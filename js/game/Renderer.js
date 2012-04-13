@@ -17,12 +17,11 @@
       canvas.height = h;
     }
 
-    var _initDebug = false;
+    var debugDraw;
+
     function initDebug () {
-      _initDebug = true;
-      var debugDraw = new Box2D.Dynamics.b2DebugDraw();
+      debugDraw = new Box2D.Dynamics.b2DebugDraw();
       debugDraw.SetSprite(ctx);
-      debugDraw.SetDrawScale(DRAW_SCALE);
       debugDraw.SetFillAlpha(0.5);
       debugDraw.SetLineThickness(1.0);
       debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit);
@@ -38,9 +37,10 @@
       var camera = game.camera;
       ctx.save();
       if (ns.DEBUG) {
-        if (!_initDebug) initDebug();
+        if (!debugDraw) initDebug();
+        debugDraw.SetDrawScale(camera.scale);
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        ctx.translate(game.camera.x, game.camera.y);
+        ctx.translate(camera.x, camera.y);
         game.world.world.DrawDebugData();
       }
       else {
@@ -145,7 +145,7 @@
 
       setup();
       requestAnimFrame(function loop () {
-        requestAnimFrame(loop);
+        requestAnimFrame(loop, canvas);
         game.world.update();
         render();
       }, canvas);

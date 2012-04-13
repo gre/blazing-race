@@ -3,14 +3,34 @@
   var makeEvent = BlazingRace.util.makeEvent
   , clamp = BlazingRace.util.clamp
   , smoothstep = BlazingRace.util.smoothstep
+  ,	b2FixtureDef = Box2D.Dynamics.b2FixtureDef
+  ,	b2BodyDef = Box2D.Dynamics.b2BodyDef
+  ,	b2Body = Box2D.Dynamics.b2Body
+  ,	b2CircleShape = Box2D.Collision.Shapes.b2CircleShape
   ;
-
 
   ns.Player = function (game, _x, _y, _controls, _camera) {
     var world = game.world;
     var self = this;
     self.size = 0.5;
-    self.body = world.createPlayerBody(self.size, _x, _y);
+    self.body = createPlayerBody(self.size, _x, _y);
+
+    function createPlayerBody (size, x, y) {
+      var bodyDef = new b2BodyDef;
+      bodyDef.type = b2Body.b2_dynamicBody;
+      bodyDef.position.x = x;
+      bodyDef.position.y = y;
+      //bodyDef.angularDamping = 0.2;
+      var player = world.world.CreateBody(bodyDef);
+      var fixDef = new b2FixtureDef;
+      fixDef.density = 1.0;
+      fixDef.friction = 0.2;
+      fixDef.restitution = 0.2;
+      fixDef.shape = new b2CircleShape(size);
+      player.CreateFixture(fixDef);
+      player.SetUserData({ type: "player" });
+      return player;
+    }
 
     self.E = makeEvent({});
 
@@ -20,7 +40,7 @@
     self.rez = self.body.GetPosition().Copy();
 
     var POWER_FORCE = 15;
-    var POWER_LOAD_SPEED = 4000;
+    var POWER_LOAD_SPEED = 3000;
 
     self.oxygen = 1;
 
@@ -107,9 +127,7 @@
     function initParticles () {
       pe = new cParticleEmitter();
       pe.maxParticles = 250;
-      pe.size = DRAW_SCALE*0.6;
       pe.sizeRandom = 10;
-      pe.gravity = cParticleVector.create(-0.001, -0.02*DRAW_SCALE);
       pe.speed = 1;
       pe.speedRandom = 0.5;
       pe.sharpness = 20;
@@ -134,12 +152,12 @@
       var playerBg = ctx.createPattern(coal, "repeat");
       ctx.fillStyle = playerBg;
       ctx.beginPath();
-      ctx.arc(0, 0, self.size*DRAW_SCALE, 0, Math.PI*2);
+      ctx.arc(0, 0, self.size*camera.scale, 0, Math.PI*2);
       ctx.fill();
       ctx.fillStyle="rgba(255, 100, 0, "+(Math.floor(self.oxygen*100*0.7+0.1)/100)+")";
       ctx.globalCompositeOperation = "lighter";
       ctx.beginPath();
-      ctx.arc(0, 0, self.size*DRAW_SCALE, 0, Math.PI*2);
+      ctx.arc(0, 0, self.size*camera.scale, 0, Math.PI*2);
       ctx.fill();
       ctx.restore();
     }
@@ -158,6 +176,8 @@
       }
       // this is hacky... FIXME
       p = camera.realPositionToCanvas(p);
+      pe.size = camera.scale*0.6;
+      pe.gravity = { x: 0, y: -0.02*camera.scale };
       pe.position.x = p.x-11-camera.x;
       pe.position.y = p.y-8+camera.y;
       ctx.translate(camera.x, -camera.y);
@@ -166,9 +186,9 @@
     }
     
     var POWER_CIRCLE_OPEN = 0.05 * Math.PI;
-    var POWER_CURSOR_SIZE = 10;
-    var POWER_CIRCLE_LINEWIDTH = 5;
-    var POWER_CIRCLE_COLOR = 'rgba(60,60,60,0.5)';
+    var POWER_CURSOR_SIZE = 0.25;
+    var POWER_CIRCLE_LINEWIDTH = 0.1;
+    var POWER_CIRCLE_COLOR = 'rgba(220,200,150,0.5)';
     function drawPowerCircle (ctx, camera) {
       //var pos = self.getPosition();
       var pos = camera.realPositionToCanvas(self.getPosition());
@@ -197,13 +217,13 @@
       ctx.fillStyle = POWER_CIRCLE_COLOR;
       ctx.translate(pos.x, pos.y);
       ctx.beginPath();
-      ctx.lineWidth = intensity * POWER_CIRCLE_LINEWIDTH;
-      ctx.arc(0, 0, intensityDist*DRAW_SCALE, fromAngle, toAngle);
+      ctx.lineWidth = power * POWER_CIRCLE_LINEWIDTH * camera.scale;
+      ctx.arc(0, 0, powerDist*camera.scale, fromAngle, toAngle);
       ctx.stroke();
 
       if (p) {
         ctx.beginPath();
-        ctx.arc(intensityDist*p.x*DRAW_SCALE, -intensityDist*p.y*DRAW_SCALE, intensity*POWER_CURSOR_SIZE, 0, 2*Math.PI);
+        ctx.arc(intensityDist*p.x*camera.scale, -intensityDist*p.y*camera.scale, intensity*POWER_CURSOR_SIZE*camera.scale, 0, 2*Math.PI);
         ctx.fill();
       }
 

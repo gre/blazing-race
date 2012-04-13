@@ -79,7 +79,7 @@
     }
 
     /// RENDERING
-    var candleOn, candleOff, CANDLE_W = 30, CANDLE_H = 30;
+    var candleOn, candleOff;
 
     function drawCandleIndicator (ctx, candle) {
       var playerPosition = self.player.getPosition();
@@ -109,6 +109,8 @@
     }
 
     function drawCandle (ctx, candle, camera, i) {
+      var CANDLE_W = 1 * camera.scale;
+      var CANDLE_H = Math.floor(CANDLE_W * candleOn.height/candleOn.width);
       var position = candle.GetPosition();
       var fixture = candle.GetFixtureList();
       var lighted = fixture.GetBody().GetUserData().lighted;
@@ -149,7 +151,6 @@
     self.setup = function (loader) {
       candleOn = loader.getResource("candle-on");
       candleOff = loader.getResource("candle-off");
-      CANDLE_H = Math.floor(CANDLE_W * candleOn.height/candleOn.width);
       self.world.setup(loader);
       self.player.setup(loader);
     }

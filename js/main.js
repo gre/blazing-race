@@ -18,7 +18,6 @@ $(function(){
   ;
 
 (function main () {
-  window.DRAW_SCALE = 30; // TODO : remove and put somewhere (probably camera)
   var isMobile = /ipad|iphone|android/i.test(navigator.userAgent);
   var node = $("#game");
 
@@ -37,7 +36,7 @@ $(function(){
     // TODO new Map(map);
     var world = new World(map);
     var controls = isMobile ? new TouchControls(node) : new MouseControls(node);
-    var camera = new Camera(world, W, H);
+    var camera = new Camera(world, W, H, 30);
     var game = new Game(world, camera);
     var rendering = new Renderer(game, W, H, node, loader);
     var recorder = new GameRecorder(game);
