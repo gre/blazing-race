@@ -158,14 +158,9 @@
     self.render = function (ctx, camera) {
       drawBackground(ctx);
       self.world.render(ctx, camera);
-      /*
-      ctx.save();
-      ctx.translate(self.camera.x, self.camera.y);
-      */
       for (var i = 0; i < self.world.candles.length; ++i) {
         drawCandle(ctx, self.world.candles[i], camera, i);
       }
-      //ctx.restore();
       self.player.render(ctx, camera);
     }
   }

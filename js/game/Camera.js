@@ -40,6 +40,10 @@
       )
     }
 
+    self.translateContext = function (ctx) {
+      ctx.translate(self.x, -self.y-self.scale*world.height+self.height);
+    }
+
     // Return the projected point of the point o with the vector v
     // to the camera bound with a given padding.
     self.projectOnBounds = function (o, v, padding) {
@@ -90,7 +94,7 @@
         else {
           x = 0;
         }
-        self.x = x;
+        self.x = Math.round(x);
       }
       if(self.scale*world.height > self.height) {
         if(v.y*self.scale < (self.scale*world.height - self.height/2) && v.y*self.scale > self.height/2) {
@@ -102,7 +106,7 @@
         else {
           y = 0;
         }
-        self.y = y;
+        self.y = Math.round(y);
       }
     }
   }

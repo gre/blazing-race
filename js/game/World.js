@@ -112,30 +112,35 @@
     }
 
     // RENDERING
-    var mapTexture;
+    var mapImg;
+
+    var mapTexture = $('<canvas></canvas>')[0], 
+        mapTextureCtx = mapTexture.getContext("2d");
+    function generateMapTexture (camera) {
+      mapTexture.width = self.width * camera.scale;
+      mapTexture.height = self.height * camera.scale;
+      mapTextureCtx.drawImage(mapImg, 
+          0, 0, mapImg.width, mapImg.height,
+          0, 0, mapTexture.width, mapTexture.height);
+    }
+
+    var lastScale;
+    function generateMapTextureIfChanged (camera) {
+      if (camera.scale !== lastScale) {
+        lastScale = camera.scale;
+        generateMapTexture(camera);
+      }
+    }
 
     self.setup = function (loader) {
-      mapTexture = loader.getResource("map");
+      mapImg = loader.getResource("map");
     }
 
     self.render = function (ctx, camera) {
+      generateMapTextureIfChanged(camera);
       ctx.save();
-      // drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh)
-      var scalex = (camera.scale*(self.width / mapTexture.width));
-      var scaley = (camera.scale*(self.height / mapTexture.height));
-      var sx = -camera.x/scalex;
-      var sy = (camera.scale*self.height+camera.y-camera.height)/scaley;
-      var sw = camera.width/scalex;
-      var sh = camera.height/scaley;
-      var dx = 0;
-      var dy = 0;
-      var dw = camera.width;
-      var dh = camera.height;
-      sx = Math.floor(sx);
-      sy = Math.floor(sy);
-      sw = Math.floor(sw);
-      sh = Math.floor(sh);
-      ctx.drawImage(mapTexture, sx, sy, sw, sh, dx, dy, dw, dh);
+      camera.translateContext(ctx);
+      ctx.drawImage(mapTexture, 0, 0);
       ctx.restore();
     }
     
