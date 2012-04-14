@@ -123,18 +123,29 @@
       self.E.pub("die");
     }
 
+    function getPeSize (camera) {
+      return 0.6 * camera.scale;
+    }
+
     var pe;
-    function initParticles () {
+    function initParticles (camera) {
+      pe && pe.stopParticleEmitter();
       pe = new cParticleEmitter();
-      pe.maxParticles = 250;
-      pe.sizeRandom = 10;
-      pe.speed = 1;
-      pe.speedRandom = 0.5;
-      pe.sharpness = 20;
+      pe.maxParticles = 200;
       pe.lifeSpan = 10;
       pe.lifeSpanRandom = 5;
       pe.position.x = -1000;
       pe.position.y = -1000;
+      if (camera) {
+        pe.gravity = { x: 0, y: -0.02*camera.scale };
+        pe.size = getPeSize(camera);
+        pe.sizeRandom = 0.3*camera.scale;
+        pe.speed = 0.04*camera.scale;
+        pe.speedRandom = 0.015*camera.scale;
+        pe.sharpness = 0.66*camera.scale;
+        pe.sharpnessRandom = 0.33*camera.scale;
+        pe.positionRandom = { x: 0.3*camera.scale, y: 0.3*camera.scale };
+      }
 		  pe.init();
     }
 
@@ -144,7 +155,7 @@
     function drawPlayer (ctx, camera) {
       ctx.save();
       if (self.isDead()) {
-        pe.duration = 0;
+        pe.stopParticleEmitter();
       }
       var p = camera.realPositionToCanvas(self.getPosition());
       ctx.translate(p.x, p.y);
@@ -169,17 +180,17 @@
       var p = self.getPosition();
       ctx.globalCompositeOperation = "lighter";
 
+      if (pe.size != getPeSize(camera)) {
+        initParticles(camera);
+      }
       var now = +new Date();
       if (now >= lastEmit + 20) {
         pe.update(Math.min(1/self.power, 10));
         lastEmit = now;
       }
-      // this is hacky... FIXME
       p = camera.realPositionToCanvas(p);
-      pe.size = camera.scale*0.6;
-      pe.gravity = { x: 0, y: -0.02*camera.scale };
-      pe.position.x = p.x-11-camera.x;
-      pe.position.y = p.y-8+camera.y;
+      pe.position.x = p.x-0.35*camera.scale-camera.x;
+      pe.position.y = p.y-0.3*camera.scale+camera.y;
       ctx.translate(camera.x, -camera.y);
       pe.renderParticles(ctx);
       ctx.restore();

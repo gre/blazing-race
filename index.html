@@ -8,8 +8,13 @@
 
   <link rel="stylesheet" href="css/main.css" />
 
+  <script type="text/javascript">
+    window.DEV_MODE = location.host.match("localhost");
+  </script>
+
   <script src="js/lib/jquery-1.7.2.min.js" type="text/javascript"></script>
   <script src="js/lib/Box2dWeb-2.1.a.3.min.js" type="text/javascript"></script>
+  <script src="js/lib/Stats.js" type="text/javascript"></script>
   <script src="js/lib/parcycle.js" type="text/javascript"></script>
   <script src="js/requestAnimFrame.js" type="text/javascript"></script>
   <script src="js/util.js" type="text/javascript"></script>
@@ -41,7 +46,20 @@
     </footer>
   </div>
   <script type="text/javascript">
-  
+    if (window.DEV_MODE) {
+      var stats = new Stats();
+
+      // Align top-left
+      stats.getDomElement().style.position = 'absolute';
+      stats.getDomElement().style.left = '0px';
+      stats.getDomElement().style.top = '0px';
+
+      document.body.appendChild( stats.getDomElement() );
+
+      setInterval( function () {
+        stats.update();
+      }, 1000 / 60 );
+    }
   </script>
 </body>
 </html>
