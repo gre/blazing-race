@@ -16,7 +16,6 @@
     self.camera = camera;
 
     self.startTime = 0;
-    self.candleCount = 0;
 
 
     function stop() {
@@ -25,18 +24,10 @@
 
     function start() {
       self.startTime = +new Date();
-      world.bindCollision(self.player.body, "candle", function (playerBody, candleBody, playerData, candleData) {
-        if (self.player.oxygen>0 && !candleData.lighted) {
-          candleData.lighted = true;
-          candleBody.SetUserData(candleData);
-          ++ self.candleCount;
-          self.E.pub("lightCandle", { body: candleBody });
-        }
-      });
     }
 
     function won () {
-      return self.candleCount >= world.map.candles.length;
+      return self.player.candleCount >= world.map.candles.length;
     }
 
     self.checkGameState = function () {
@@ -61,7 +52,7 @@
     // FIXME TODO new Candle () 
     var candleOn, candleOff;
 
-    function drawCandleIndicator (ctx, candle) {
+    function drawCandleIndicator (ctx, camera, candle) {
       var playerPosition = self.player.getPosition();
       var v = candle.GetPosition().Copy();
       v.Subtract(playerPosition);
@@ -70,7 +61,7 @@
       var size = 40*(1-1.2*smoothstep(0, mindist, dist));
 
       if (size > 0) {
-        var p = self.camera.projectOnBounds(playerPosition, v, size+5);
+        var p = camera.projectOnBounds(playerPosition, v, size+5);
 
         ctx.save();
         ctx.translate(p.x, p.y);
@@ -104,7 +95,7 @@
       }(p.x, p.y));
 
       if (!visible && !lighted) {
-        drawCandleIndicator(ctx, candle);
+        drawCandleIndicator(ctx, camera, candle);
       }
 
       if (visible) {

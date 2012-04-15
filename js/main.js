@@ -58,10 +58,6 @@ $(function(){
 
       // TODO I like these lines, need to rewrite lot of things like this:
 
-      game.E.sub("lightCandle", function (candle) {
-        player.saveRezPoint();
-      });
-
       game.E.sub("started", function (i) {
         controls.start();
       });

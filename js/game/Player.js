@@ -15,6 +15,28 @@
     self.size = 0.5;
     self.body = createPlayerBody(self.size, _x, _y);
 
+    self.candleCount = 0;
+
+    self.E = makeEvent({});
+
+    self.controls = _controls;
+    self.camera = _camera;
+    self.oxygen = 1;
+    self.power = 1;
+
+    self.rez = self.body.GetPosition().Copy();
+    self.MAX_DIST = 5;
+
+    world.bindCollision(self.body, "candle", function (playerBody, candleBody, playerData, candleData) {
+      if (self.oxygen>0 && !candleData.lighted) {
+        candleData.lighted = true;
+        candleBody.SetUserData(candleData);
+        ++ self.candleCount;
+        self.saveRezPoint();
+        self.E.pub("lightCandle", { body: candleBody, data: candleData });
+      }
+    });
+
     world.bindFluids(self.body, function () { 
       self.oxygen>0 && self.die();
     });
@@ -36,23 +58,12 @@
       return player;
     }
 
-    self.E = makeEvent({});
-
-    self.controls = _controls;
-    self.camera = _camera;
-
-    self.rez = self.body.GetPosition().Copy();
-
     var POWER_FORCE = 15;
     var POWER_LOAD_SPEED = 3000;
 
-    self.oxygen = 1;
-
-    self.power = 1;
     var lastPowerUse = 0;
     var lastPowerUseRemaining = 0;
 
-    self.MAX_DIST = 5;
     self.getIntensity = function (dist) {
       return smoothstep(0, self.MAX_DIST, dist);
     }
@@ -104,10 +115,6 @@
       lastPowerUse = +new Date();
       lastPowerUseRemaining = self.power;
       return powerUsage * POWER_FORCE;
-    }
-
-    self.onContact = function (contact) {
-
     }
 
     self.reignition = function () {

@@ -30,7 +30,7 @@
     var waterShapes = [];
 
     var fluid = new b2BuoyancyController();
-    fluid.density = 1.2;
+    fluid.density = 1.1;
     fluid.offset = 0;
     self.waterController = fluid;
     self.world.AddController(fluid);
@@ -65,13 +65,15 @@
         }
       }
       var collideWater = false;
-      var idTransform = new b2Transform();
-      idTransform.SetIdentity();
+      var t = new b2Transform();
+      t.SetIdentity();
       for (var f=body.GetFixtureList(); f && !collideWater; f=f.GetNext()) {
+        var aabb = f.GetAABB();
         var s = f.GetShape();
+        t.position = new b2Vec2(0, (aabb.lowerBound.y-aabb.upperBound.y)/2); // hacky..
         for (var w = 0; w < waterShapes.length && !collideWater; ++w) {
           var water = waterShapes[w];
-          collideWater = b2Shape.TestOverlap(water, idTransform, s, body.GetTransform());
+          collideWater = b2Shape.TestOverlap(water, t, s, body.GetTransform());
         }
       }
       // something has changed
