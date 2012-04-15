@@ -217,7 +217,7 @@
 
 
     var coalImg;
-    var coal = $('<canvas></canvas>').appendTo("body")[0], 
+    var coal = $('<canvas></canvas>')[0], 
     coalCtx = coal.getContext("2d");
 
     function generateCoal (scale) {
