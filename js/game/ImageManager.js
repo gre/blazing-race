@@ -7,6 +7,8 @@
 
     var resources = {};
 
+    var version = window.VERSION || 1;
+
     var nb = 0;
     for (var name in images) { ++ nb }
 
@@ -17,7 +19,7 @@
         if (self.isReady())
           onloaded();
       }
-      img.src = images[name];
+      img.src = images[name]+"?v="+version;
       resources[name] = img;
     }
 

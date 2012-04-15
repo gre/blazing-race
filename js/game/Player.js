@@ -135,53 +135,40 @@
       self.E.pub("die");
     }
 
+
+    // RENDERING
+    var PARTICLE_SIZE = 1.1
+
     function getPeSize (camera) {
-      return 0.6 * camera.scale;
+      return PARTICLE_SIZE * camera.scale;
     }
 
     var pe;
     function initParticles (camera) {
       pe && pe.stopParticleEmitter();
       pe = new cParticleEmitter();
-      pe.maxParticles = 200;
-      pe.lifeSpan = 10;
-      pe.lifeSpanRandom = 5;
+      pe.maxParticles = 60;
+      pe.lifeSpan = 9;
+      pe.lifeSpanRandom = 1;
       pe.position.x = -1000;
       pe.position.y = -1000;
+	    pe.startColour = [ 240, 208, 68, 1 ];
+	    pe.startColourRandom = [ 40, 40, 60, 0 ];
+	    pe.finishColour = [ 245, 35, 0, 0 ];  
+	    pe.finishColourRandom = [ 20, 20, 20, 0 ];
       if (camera) {
-        pe.gravity = { x: 0, y: -0.02*camera.scale };
+        pe.gravity = { x: 0, y: -0.03*camera.scale };
         pe.size = getPeSize(camera);
-        pe.sizeRandom = 0.3*camera.scale;
-        pe.speed = 0.04*camera.scale;
-        pe.speedRandom = 0.015*camera.scale;
-        pe.sharpness = 0.66*camera.scale;
-        pe.sharpnessRandom = 0.33*camera.scale;
-        pe.positionRandom = { x: 0.3*camera.scale, y: 0.3*camera.scale };
+        pe.sizeRandom = 0.4*camera.scale;
+        pe.speed = 0.01*camera.scale;
+        pe.speedRandom = 0.005*camera.scale;
+        pe.sharpness = .3*camera.scale;
+        pe.sharpnessRandom = .1*camera.scale;
+        pe.positionRandom = { x: 0.*camera.scale, y: 0.*camera.scale };
       }
 		  pe.init();
     }
-
-    // RENDERING
-    var coal;
-
-    function drawPlayer (ctx, camera) {
-      ctx.save();
-      var p = camera.realPositionToCanvas(self.getPosition());
-      ctx.translate(p.x, p.y);
-      ctx.rotate(self.body.GetAngle());
-      var playerBg = ctx.createPattern(coal, "repeat");
-      ctx.fillStyle = playerBg;
-      ctx.beginPath();
-      ctx.arc(0, 0, self.size*camera.scale, 0, Math.PI*2);
-      ctx.fill();
-      ctx.fillStyle="rgba(255, 100, 0, "+(Math.floor(self.oxygen*100*0.7+0.1)/100)+")";
-      ctx.globalCompositeOperation = "lighter";
-      ctx.beginPath();
-      ctx.arc(0, 0, self.size*camera.scale, 0, Math.PI*2);
-      ctx.fill();
-      ctx.restore();
-    }
-
+  
     var lastEmit = 0;
     function drawFlame (ctx, camera) {
       ctx.save();
@@ -192,17 +179,56 @@
         initParticles(camera);
       }
       var now = +new Date();
-      if (now >= lastEmit + 20) {
-        pe.update(Math.min(1/self.power, 10));
+      if (now >= lastEmit + 25) {
+        pe.lifeSpan = Math.round(1+self.power*8);
+        pe.update(1);
         lastEmit = now;
       }
       p = camera.realPositionToCanvas(p);
-      pe.position.x = p.x-0.35*camera.scale-camera.x;
-      pe.position.y = p.y-0.3*camera.scale+camera.y;
+      pe.position.x = p.x-0.65*camera.scale-camera.x;
+      pe.position.y = p.y-0.55*camera.scale+camera.y;
       ctx.translate(camera.x, -camera.y);
       pe.renderParticles(ctx);
       ctx.restore();
     }
+
+
+    var coalImg;
+    var coal = $('<canvas></canvas>').appendTo("body")[0], 
+    coalCtx = coal.getContext("2d");
+
+    function generateCoal (camera) {
+      var x, y;
+      coal.width = 2* self.size * camera.scale;
+      coal.height = 2* self.size * camera.scale;
+      coalCtx.drawImage(coalImg,
+          0, 0, coalImg.width, coalImg.height,
+          0, 0, coal.width, coal.height);
+    }
+
+    var lastScaleCoal;
+    function generateCoalIfChanged (camera) {
+      if (camera.scale !== lastScaleCoal) {
+        lastScaleCoal = camera.scale;
+        generateCoal(camera);
+      }
+    }
+
+    function drawPlayer (ctx, camera) {
+      generateCoalIfChanged(camera);
+      ctx.save();
+      var p = camera.realPositionToCanvas(self.getPosition());
+      ctx.translate(p.x, p.y);
+      ctx.rotate(-self.body.GetAngle());
+      ctx.drawImage(coal, Math.round(-coal.width/2), Math.round(-coal.height/2));
+      ctx.fillStyle="rgba(255, 100, 0, "+(Math.floor(self.oxygen*100*0.5+0.1)/100)+")";
+      ctx.globalCompositeOperation = "lighter";
+      ctx.beginPath();
+      ctx.arc(0, 0, self.size*camera.scale, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+
     
     var POWER_CIRCLE_OPEN = 0.05 * Math.PI;
     var POWER_CURSOR_SIZE = 0.25;
@@ -250,7 +276,7 @@
     }
 
     self.setup = function (loader) {
-      coal = loader.getResource("coal");
+      coalImg = loader.getResource("coal");
     }
 
     self.renderControls = function (ctx, camera) {

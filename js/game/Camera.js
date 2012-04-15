@@ -35,8 +35,8 @@
 
     self.realPositionToCanvas = function (p) {
       return new b2Vec2(
-        self.x + self.scale*p.x,
-        -self.y -self.scale*(p.y)+self.height
+        Math.round(self.x + self.scale*p.x),
+        Math.round(-self.y -self.scale*(p.y)+self.height)
       )
     }
 

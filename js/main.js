@@ -85,7 +85,6 @@ $(function(){
           rendering.resize(w, h);
         }
       }).resize();
-
     });
 
   });
