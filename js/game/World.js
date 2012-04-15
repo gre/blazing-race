@@ -5,8 +5,10 @@
   var b2Vec2 = Box2D.Common.Math.b2Vec2
   , b2BuoyancyController = Box2D.Dynamics.Controllers.b2BuoyancyController
   , b2World = Box2D.Dynamics.b2World
+  , b2Shape = Box2D.Collision.Shapes.b2Shape
   ,	b2FixtureDef = Box2D.Dynamics.b2FixtureDef
   ,	b2BodyDef = Box2D.Dynamics.b2BodyDef
+  , b2Transform = Box2D.Common.Math.b2Transform
   ,	b2Body = Box2D.Dynamics.b2Body
   ,	b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape
   ;
@@ -24,11 +26,65 @@
 
     self.E = makeEvent({});
 
+    self.waters = [];
+
     var fluid = new b2BuoyancyController();
-    fluid.offset = -70;
     fluid.density = 1.2;
+    fluid.offset = 0;
     self.waterController = fluid;
     self.world.AddController(fluid);
+
+    var fluidsBound = [];
+    self.bindFluids = function (body, enter, leave) {
+      fluidsBound.push(arguments);
+    }
+    self.unbindFluids = function (body) {
+      for (var i=0; i<fluidsBound.length; ++i) {
+        var bound = fluidsBound[i];
+        if (bound[0] == body) {
+          fluidsBound.splice(i, 1);
+          return;
+        }
+      }
+    }
+
+    self.checkFluids = function () {
+      for (var i = 0; i < fluidsBound.length; ++ i) {
+        self.checkFluid.apply(this, fluidsBound[i]);
+      }
+    }
+
+    self.checkFluid = function (body, enter, leave) {
+      var inFluid = false;
+      for (var o=self.waterController.GetBodyList(); o; o=o.nextBody) {
+        var b = o.body;
+        if (b === body) {
+          inFluid = true;
+          break;
+        }
+      }
+      var collideWater = false;
+      var idTransform = new b2Transform();
+      idTransform.SetIdentity();
+      for (var f=body.GetFixtureList(); f && !collideWater; f=f.GetNext()) {
+        var s = f.GetShape();
+        for (var w = 0; w < self.waters.length && !collideWater; ++w) {
+          var water = self.waters[w];
+          collideWater = b2Shape.TestOverlap(water, idTransform, s, body.GetTransform());
+        }
+      }
+      // something has changed
+      if (inFluid != collideWater) {
+        if (collideWater) {
+          self.waterController.AddBody(body);
+          enter && enter();
+        }
+        else {
+          self.waterController.RemoveBody(body);
+          leave && leave();
+        }
+      }
+    }
 
     var groundFixDef = new b2FixtureDef;
     groundFixDef.density = 1.0;
@@ -84,6 +140,8 @@
         if (type == "waters") {
           for (var i = 0; i<value.length; ++i) {
             forEachPolygons(value[i], function (arr) {
+              self.waters.push( b2PolygonShape.AsArray(arr, arr.length) );
+              /*
               fixDef.shape.SetAsArray(arr, arr.length);
 
               var bodyDef = new Box2D.Dynamics.b2BodyDef();
@@ -92,21 +150,25 @@
               var water = world.CreateBody(bodyDef);
               water.CreateFixture(fixDef);
               water.SetUserData({ type: "water" });
-              //self.waterController.AddBody(water);
+              self.waterController.AddBody(water);
+              */
             });
           }
         }
       }
     }
 
+
     var i = 0;
     function update() {
       self.world.Step(1 / 60, 10, 10);
+      self.checkFluids();
       self.E.pub("update", ++i);
       self.world.ClearForces();
     }
 
     self.update = update;
+
     self.start = function () {
       init(self.world);
     }

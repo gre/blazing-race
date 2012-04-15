@@ -15,6 +15,10 @@
     self.size = 0.5;
     self.body = createPlayerBody(self.size, _x, _y);
 
+    world.bindFluids(self.body, function () { 
+      self.oxygen>0 && self.die();
+    });
+
     function createPlayerBody (size, x, y) {
       var bodyDef = new b2BodyDef;
       bodyDef.type = b2Body.b2_dynamicBody;
@@ -112,14 +116,15 @@
     }
 
     self.ignition = function () {
-      initParticles();
       self.oxygen = 1;
+
+      initParticles();
       self.E.pub("live");
     }
 
     self.die = function () {
       self.oxygen = 0;
-      pe.duration = -1;
+      pe.stopParticleEmitter();
       self.E.pub("die");
     }
 
@@ -154,9 +159,6 @@
 
     function drawPlayer (ctx, camera) {
       ctx.save();
-      if (self.isDead()) {
-        pe.stopParticleEmitter();
-      }
       var p = camera.realPositionToCanvas(self.getPosition());
       ctx.translate(p.x, p.y);
       ctx.rotate(self.body.GetAngle());

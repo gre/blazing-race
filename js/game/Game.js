@@ -39,11 +39,7 @@
         }
         */
         if (aData && bData) {
-          if (aData.type=="water" && bData.type=="player" && self.player.oxygen>0) {
-            self.player.die();
-            self.E.pub("collideWater");
-          }
-          else if (aData.type=="candle" && bData.type=="player") {
+          if (aData.type=="candle" && bData.type=="player") {
             if (self.player.oxygen && !aData.lighted) {
               aData.lighted = true;
               var candle = contact.GetFixtureA().GetBody();
