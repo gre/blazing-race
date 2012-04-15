@@ -220,6 +220,7 @@
         mapBgTextureCtx = mapBgTexture.getContext("2d");
     var parallax = { x: 0.7, y: 0.6 };
     function generateMapBgTexture (camera) {
+      var x, y;
       mapBgTexture.width = self.width * camera.scale;
       mapBgTexture.height = self.height * camera.scale;
       for (x=0; x<mapBgTexture.width; x += mapBgImg.width) {

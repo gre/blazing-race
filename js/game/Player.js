@@ -183,7 +183,6 @@
     }
 
     var lastEmit = 0;
-    // TODO : clip to space around
     function drawFlame (ctx, camera) {
       ctx.save();
       var p = self.getPosition();

@@ -26,10 +26,10 @@
       self.startTime = +new Date();
     }
 
+    // TODO REMOVE
     function won () {
       return self.player.candleCount >= world.map.candles.length;
     }
-
     self.checkGameState = function () {
       if (won())
         return 1;
