@@ -57,6 +57,8 @@
     }
 
     /// RENDERING
+    
+    // FIXME TODO new Candle () 
     var candleOn, candleOff;
 
     function drawCandleIndicator (ctx, candle) {
@@ -120,12 +122,6 @@
       }
     }
     
-    function drawBackground (ctx) {
-      ctx.fillStyle = 'rgb(20, 20, 20)';
-      ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    }
-
-
     self.setup = function (loader) {
       candleOn = loader.getResource("candleOn");
       candleOff = loader.getResource("candleOff");
@@ -134,12 +130,14 @@
     }
 
     self.render = function (ctx, camera) {
-      drawBackground(ctx);
-      self.world.render(ctx, camera);
+      self.world.renderBackground(ctx, camera);
+      self.player.renderBall(ctx, camera);
+      self.player.renderFlame(ctx, camera);
+      self.world.renderMap(ctx, camera);
       for (var i = 0; i < self.world.candles.length; ++i) {
         drawCandle(ctx, self.world.candles[i], camera, i);
       }
-      self.player.render(ctx, camera);
+      self.player.renderControls(ctx, camera);
     }
   }
 

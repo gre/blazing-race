@@ -28,6 +28,7 @@ $(function(){
     var H = node.height();
 
     var loader = new ImageManager({
+      map_background: "maps/"+level+"_background.jpg",
       map: "maps/"+level+".png",
       coal: "images/coal.png",
       candleOff: "images/candle-off.png",

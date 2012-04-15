@@ -27,7 +27,7 @@
 
     self.E = makeEvent({});
 
-    self.waters = [];
+    var waterShapes = [];
 
     var fluid = new b2BuoyancyController();
     fluid.density = 1.2;
@@ -69,8 +69,8 @@
       idTransform.SetIdentity();
       for (var f=body.GetFixtureList(); f && !collideWater; f=f.GetNext()) {
         var s = f.GetShape();
-        for (var w = 0; w < self.waters.length && !collideWater; ++w) {
-          var water = self.waters[w];
+        for (var w = 0; w < waterShapes.length && !collideWater; ++w) {
+          var water = waterShapes[w];
           collideWater = b2Shape.TestOverlap(water, idTransform, s, body.GetTransform());
         }
       }
@@ -156,7 +156,7 @@
           for (var i = 0; i<value.length; ++i) {
             var raw = value[i];
             var x = raw.x, y = raw.y;
-            fixDef.shape.SetAsBox(0.3, 0.3);
+            fixDef.shape.SetAsBox(0.4, 0.5);
             bodyDef.position.Set(x, y);
             var body = world.CreateBody(bodyDef);
             body.SetUserData({ type: "candle" });
@@ -167,18 +167,7 @@
         if (type == "waters") {
           for (var i = 0; i<value.length; ++i) {
             forEachPolygons(value[i], function (arr) {
-              self.waters.push( b2PolygonShape.AsArray(arr, arr.length) );
-              /*
-              fixDef.shape.SetAsArray(arr, arr.length);
-
-              var bodyDef = new Box2D.Dynamics.b2BodyDef();
-              bodyDef.position.Set(0,0);
-
-              var water = world.CreateBody(bodyDef);
-              water.CreateFixture(fixDef);
-              water.SetUserData({ type: "water" });
-              self.waterController.AddBody(water);
-              */
+              waterShapes.push( b2PolygonShape.AsArray(arr, arr.length) );
             });
           }
         }
@@ -201,6 +190,8 @@
     }
 
     // RENDERING
+
+    // map
     var mapImg;
 
     var mapTexture = $('<canvas></canvas>')[0], 
@@ -221,11 +212,44 @@
       }
     }
 
-    self.setup = function (loader) {
-      mapImg = loader.getResource("map");
+    // map background
+    var mapBgImg;
+    var mapBgTexture = $('<canvas></canvas>')[0], 
+        mapBgTextureCtx = mapBgTexture.getContext("2d");
+    var parallax = { x: 0.7, y: 0.6 };
+    function generateMapBgTexture (camera) {
+      mapBgTexture.width = self.width * camera.scale;
+      mapBgTexture.height = self.height * camera.scale;
+      for (x=0; x<mapBgTexture.width; x += mapBgImg.width) {
+        for (y=0; y<mapBgTexture.height; y += mapBgImg.height) {
+          mapBgTextureCtx.drawImage(mapBgImg, x, y);
+        }
+      }
     }
 
-    self.render = function (ctx, camera) {
+    var lastScaleBg;
+    function generateMapBgTextureIfChanged (camera) {
+      if (camera.scale !== lastScaleBg) {
+        lastScaleBg = camera.scale;
+        generateMapBgTexture(camera);
+      }
+    }
+
+
+    self.setup = function (loader) {
+      mapImg = loader.getResource("map");
+      mapBgImg = loader.getResource("map_background");
+    }
+
+    self.renderBackground = function (ctx, camera) {
+      generateMapBgTextureIfChanged(camera);
+      ctx.save();
+      camera.translateContextWithParallax(ctx, parallax.x, parallax.y);
+      ctx.drawImage(mapBgTexture, 0, 0);
+      ctx.restore();
+    }
+
+    self.renderMap = function (ctx, camera) {
       generateMapTextureIfChanged(camera);
       ctx.save();
       camera.translateContext(ctx);

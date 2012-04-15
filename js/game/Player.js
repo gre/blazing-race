@@ -247,14 +247,12 @@
       coal = loader.getResource("coal");
     }
 
-    self.render = function (ctx, camera) {
-      ctx.save();
+    self.renderControls = function (ctx, camera) {
       if (self.controls.isActive())
         drawPowerCircle(ctx, camera);
-      drawPlayer(ctx, camera);
-      drawFlame(ctx, camera);
-      ctx.restore();
     }
+    self.renderBall = drawPlayer;
+    self.renderFlame = drawFlame;
   }
 
 }(window.BlazingRace));

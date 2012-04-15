@@ -41,7 +41,14 @@
     }
 
     self.translateContext = function (ctx) {
-      ctx.translate(self.x, -self.y-self.scale*world.height+self.height);
+      ctx.translate(self.x, Math.round(-self.y-self.scale*world.height+self.height));
+    }
+
+    self.translateContextWithParallax = function (ctx, x, y) {
+      ctx.translate(
+        Math.round(self.x*x), 
+        Math.round(-self.y*y-self.scale*world.height+self.height)
+      );
     }
 
     // Return the projected point of the point o with the vector v
