@@ -86,12 +86,14 @@
       if (self.power < 1) {
         self.power = clamp(0, 1, lastPowerUseRemaining+(now-lastPowerUse)/POWER_LOAD_SPEED);
       }
-      if (self.noOxygenArea) {
-        self.oxygen = clamp(0, 1, 1-(now-lastEnteredInNoOxygen)/NO_OXYGEN_CONSUMPTION_SPEED);
-        self.oxygen==0 && self.die();
-      }
-      else {
-        self.oxygen = 1;
+      if (self.oxygen>0) {
+        if (self.noOxygenArea) {
+          self.oxygen = clamp(0, 1, 1-(now-lastEnteredInNoOxygen)/NO_OXYGEN_CONSUMPTION_SPEED);
+          self.oxygen==0 && self.die();
+        }
+        else {
+          self.oxygen = 1;
+        }
       }
     });
 
