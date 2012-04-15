@@ -18,9 +18,9 @@ function Converter (collada) {
 
     var map = {
         candles: [],
-        grounds: [],
-        waters:  [],
-        noOxygens: []
+        ground: [],
+        water:  [],
+        noOxygen: []
     };
 
     var scale = { x: 1, y: 1 };
@@ -131,15 +131,15 @@ function Converter (collada) {
     }
 
     function addGround (node) {
-      map.grounds.push(mapVerticesAndFaces(node));
+      map.ground.push(mapVerticesAndFaces(node));
     }
 
     function addWater (node) {
-      map.waters.push(mapVerticesAndFaces(node));
+      map.water.push(mapVerticesAndFaces(node));
     }
 
     function addNoOxygen (node) {
-      map.noOxygens.push(mapVerticesAndFaces(node));
+      map.noOxygen.push(mapVerticesAndFaces(node));
     }
 
     _(c.scene.children).each(function(node){
@@ -168,13 +168,13 @@ function Converter (collada) {
 
     transformPosition(map.start[0]);
     _(map.candles).each(transformPosition);
-    _(map.grounds).each(function (g) {
+    _(map.ground).each(function (g) {
       _(g.vertices).each(transformPosition);
     });
-    _(map.waters).each(function (g) {
+    _(map.water).each(function (g) {
       _(g.vertices).each(transformPosition);
     });
-    _(map.noOxygens).each(function (g) {
+    _(map.noOxygen).each(function (g) {
       _(g.vertices).each(transformPosition);
     });
 

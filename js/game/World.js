@@ -27,63 +27,93 @@
 
     self.E = makeEvent({});
 
-    var waterShapes = [];
-
     var fluid = new b2BuoyancyController();
     fluid.density = 1.1;
     fluid.offset = 0;
     self.waterController = fluid;
     self.world.AddController(fluid);
 
-    var fluidsBound = [];
-    self.bindFluids = function (body, enter, leave) {
-      fluidsBound.push(arguments);
+    var bodyInAreaForArea = {
+      water: [],
+      noOxygen: []
+    };
+    var shapesForArea = {
+      water: [],
+      noOxygen: []
+    };
+
+    function indexOfBodyArea (body, area) {
+      var arr = bodyInAreaForArea[area];
+      for (var i=0; i<arr.length; ++i)
+        if (arr[i] === body)
+          return i;
+      return -1;
     }
-    self.unbindFluids = function (body) {
-      for (var i=0; i<fluidsBound.length; ++i) {
-        var bound = fluidsBound[i];
-        if (bound[0] == body) {
-          fluidsBound.splice(i, 1);
+    function addInArea (body, area) {
+      bodyInAreaForArea[area].push(body);
+    }
+    function removeFromArea (body, area) {
+      bodyInAreaForArea[area].splice(indexOfBodyArea(body, area), 1);
+    }
+    function isInArea (body, area) {
+      return indexOfBodyArea(body, area) != -1;
+    }
+
+    var areaBound = [];
+    self.bindArea = function (body, areaType, enter, leave) {
+      areaBound.push(arguments);
+    }
+    self.unbindArea = function (body, areaType) {
+      for (var i=0; i<areaBound.length; ++i) {
+        var bound = areaBound[i];
+        if (bound[0] == body && (areaType===undefined || bound[1] == areaType )) {
+          areaBound.splice(i, 1);
           return;
         }
       }
     }
-
-    self.checkFluids = function () {
-      for (var i = 0; i < fluidsBound.length; ++ i) {
-        self.checkFluid.apply(this, fluidsBound[i]);
+    self.checkAreas = function () {
+      for (var i=0; i<areaBound.length; ++i) {
+        self.checkArea.apply(this, areaBound[i]);
       }
     }
 
-    self.checkFluid = function (body, enter, leave) {
-      var inFluid = false;
-      for (var o=self.waterController.GetBodyList(); o; o=o.nextBody) {
-        var b = o.body;
-        if (b === body) {
-          inFluid = true;
-          break;
-        }
-      }
-      var collideWater = false;
+    function shapesCollideWithBody (shapes, body, halfBody) {
       var t = new b2Transform();
       t.SetIdentity();
-      for (var f=body.GetFixtureList(); f && !collideWater; f=f.GetNext()) {
-        var aabb = f.GetAABB();
+      for (var f=body.GetFixtureList(); f; f=f.GetNext()) {
         var s = f.GetShape();
-        t.position = new b2Vec2(0, (aabb.lowerBound.y-aabb.upperBound.y)/2); // hacky..
-        for (var w = 0; w < waterShapes.length && !collideWater; ++w) {
-          var water = waterShapes[w];
-          collideWater = b2Shape.TestOverlap(water, t, s, body.GetTransform());
+        // hacky..
+        if (halfBody) {
+          var aabb = f.GetAABB();
+          t.position = new b2Vec2(0, (aabb.lowerBound.y-aabb.upperBound.y)/2);
+        }
+        for (var i = 0; i < shapes.length; ++i) {
+          var sh = shapes[i];
+          if (b2Shape.TestOverlap(sh, t, s, body.GetTransform()))
+            return true;
         }
       }
+      return false;
+    }
+
+    self.checkArea = function (body, areaType, enter, leave) {
+      var inArea = isInArea(body, areaType);
+      var collide = shapesCollideWithBody (shapesForArea[areaType], body, true);
       // something has changed
-      if (inFluid != collideWater) {
-        if (collideWater) {
-          self.waterController.AddBody(body);
+      if (inArea != collide) {
+        if (collide) {
+          addInArea(body, areaType);
+          switch (areaType) {
+            case "water": self.waterController.AddBody(body); break;
+          }
           enter && enter();
         }
         else {
-          self.waterController.RemoveBody(body);
+          removeFromArea(body, areaType);
+          switch (areaType) {
+            case "water": self.waterController.RemoveBody(body); break;
+          }
           leave && leave();
         }
       }
@@ -143,7 +173,7 @@
 
       for (var type in self.map) {
         var value = self.map[type];
-        if (type == "grounds") {
+        if (type == "ground") {
           for (var i = 0; i<value.length; ++i) {
             forEachPolygons(value[i], function (arr) {
               fixDef.shape.SetAsArray(arr, arr.length);
@@ -154,7 +184,7 @@
             });
           }
         }
-        if (type == "candles") {
+        else if (type == "candles") {
           for (var i = 0; i<value.length; ++i) {
             var raw = value[i];
             var x = raw.x, y = raw.y;
@@ -166,10 +196,10 @@
             self.candles.push(body);
           }
         }
-        if (type == "waters") {
+        else if (type == "water" || type == "noOxygen") {
           for (var i = 0; i<value.length; ++i) {
             forEachPolygons(value[i], function (arr) {
-              waterShapes.push( b2PolygonShape.AsArray(arr, arr.length) );
+              shapesForArea[type].push( b2PolygonShape.AsArray(arr, arr.length) );
             });
           }
         }
@@ -180,7 +210,7 @@
     var i = 0;
     function update() {
       self.world.Step(1 / 60, 10, 10);
-      self.checkFluids();
+      self.checkAreas();
       self.E.pub("update", ++i);
       self.world.ClearForces();
     }

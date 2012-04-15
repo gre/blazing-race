@@ -18,6 +18,7 @@
     self.candleCount = 0;
 
     self.E = makeEvent({});
+    self.noOxygenArea = false;
 
     self.controls = _controls;
     self.camera = _camera;
@@ -26,6 +27,16 @@
 
     self.rez = self.body.GetPosition().Copy();
     self.MAX_DIST = 5;
+
+    var pe;
+
+    var lastEnteredInNoOxygen;
+    var lastPowerUse = 0;
+    var lastPowerUseRemaining = 0;
+
+    var POWER_FORCE = 15;
+    var POWER_LOAD_SPEED = 3000;
+    var NO_OXYGEN_CONSUMPTION_SPEED = 5000;
 
     world.bindCollision(self.body, "candle", function (playerBody, candleBody, playerData, candleData) {
       if (self.oxygen>0 && !candleData.lighted) {
@@ -37,8 +48,16 @@
       }
     });
 
-    world.bindFluids(self.body, function () { 
+    world.bindArea(self.body, "water", function () { 
       self.oxygen>0 && self.die();
+    });
+
+
+    world.bindArea(self.body, "noOxygen", function () {
+      self.noOxygenArea = true;
+      lastEnteredInNoOxygen = +new Date();
+    }, function () {
+      self.noOxygenArea = false;
     });
 
     function createPlayerBody (size, x, y) {
@@ -58,12 +77,6 @@
       return player;
     }
 
-    var POWER_FORCE = 15;
-    var POWER_LOAD_SPEED = 3000;
-
-    var lastPowerUse = 0;
-    var lastPowerUseRemaining = 0;
-
     self.getIntensity = function (dist) {
       return smoothstep(0, self.MAX_DIST, dist);
     }
@@ -72,6 +85,13 @@
       var now = +new Date();
       if (self.power < 1) {
         self.power = clamp(0, 1, lastPowerUseRemaining+(now-lastPowerUse)/POWER_LOAD_SPEED);
+      }
+      if (self.noOxygenArea) {
+        self.oxygen = clamp(0, 1, 1-(now-lastEnteredInNoOxygen)/NO_OXYGEN_CONSUMPTION_SPEED);
+        self.oxygen==0 && self.die();
+      }
+      else {
+        self.oxygen = 1;
       }
     });
 
@@ -138,17 +158,17 @@
 
     // RENDERING
     var PARTICLE_SIZE = 1.1
+    var PARTICLE_LIFESPAN = 14;
 
     function getPeSize (camera) {
       return PARTICLE_SIZE * camera.scale;
     }
 
-    var pe;
     function initParticles (camera) {
       pe && pe.stopParticleEmitter();
       pe = new cParticleEmitter();
       pe.maxParticles = 60;
-      pe.lifeSpan = 9;
+      pe.lifeSpan = PARTICLE_LIFESPAN;
       pe.lifeSpanRandom = 1;
       pe.position.x = -1000;
       pe.position.y = -1000;
@@ -157,14 +177,14 @@
 	    pe.finishColour = [ 245, 35, 0, 0 ];  
 	    pe.finishColourRandom = [ 20, 20, 20, 0 ];
       if (camera) {
-        pe.gravity = { x: 0, y: -0.03*camera.scale };
+        pe.gravity = { x: 0, y: -0.02*camera.scale };
         pe.size = getPeSize(camera);
         pe.sizeRandom = 0.4*camera.scale;
         pe.speed = 0.01*camera.scale;
         pe.speedRandom = 0.005*camera.scale;
         pe.sharpness = .3*camera.scale;
         pe.sharpnessRandom = .1*camera.scale;
-        pe.positionRandom = { x: 0.*camera.scale, y: 0.*camera.scale };
+        pe.positionRandom = { x: 0.1*camera.scale, y: 0.1*camera.scale };
       }
 		  pe.init();
     }
@@ -178,15 +198,16 @@
       if (pe.size != getPeSize(camera)) {
         initParticles(camera);
       }
+
+      p = camera.realPositionToCanvas(p);
       var now = +new Date();
       if (now >= lastEmit + 25) {
-        pe.lifeSpan = Math.round(1+self.power*8);
-        pe.update(1);
+        pe.lifeSpan = Math.round(1+self.power*(PARTICLE_LIFESPAN-1));
+        pe.position.x = p.x-0.65*camera.scale-camera.x;
+        pe.position.y = p.y-0.55*camera.scale+camera.y;
+        pe.update(self.noOxygenArea ? 0 : 1);
         lastEmit = now;
       }
-      p = camera.realPositionToCanvas(p);
-      pe.position.x = p.x-0.65*camera.scale-camera.x;
-      pe.position.y = p.y-0.55*camera.scale+camera.y;
       ctx.translate(camera.x, -camera.y);
       pe.renderParticles(ctx);
       ctx.restore();
@@ -197,34 +218,38 @@
     var coal = $('<canvas></canvas>').appendTo("body")[0], 
     coalCtx = coal.getContext("2d");
 
-    function generateCoal (camera) {
+    function generateCoal (scale) {
       var x, y;
-      coal.width = 2* self.size * camera.scale;
-      coal.height = 2* self.size * camera.scale;
+      coal.width = 2* self.size * scale;
+      coal.height = 2* self.size * scale;
       coalCtx.drawImage(coalImg,
           0, 0, coalImg.width, coalImg.height,
           0, 0, coal.width, coal.height);
     }
 
     var lastScaleCoal;
-    function generateCoalIfChanged (camera) {
-      if (camera.scale !== lastScaleCoal) {
-        lastScaleCoal = camera.scale;
-        generateCoal(camera);
+    function generateCoalIfChanged (scale) {
+      if (scale !== lastScaleCoal) {
+        lastScaleCoal = scale;
+        generateCoal(scale);
       }
     }
 
     function drawPlayer (ctx, camera) {
-      generateCoalIfChanged(camera);
+      var scale = camera.scale;
+      if (self.noOxygenArea) {
+        scale += camera.scale * 0.1 * (Math.sin((+new Date() - lastEnteredInNoOxygen)/150));
+      }
+      generateCoalIfChanged(scale);
       ctx.save();
       var p = camera.realPositionToCanvas(self.getPosition());
       ctx.translate(p.x, p.y);
       ctx.rotate(-self.body.GetAngle());
       ctx.drawImage(coal, Math.round(-coal.width/2), Math.round(-coal.height/2));
-      ctx.fillStyle="rgba(255, 100, 0, "+(Math.floor(self.oxygen*100*0.5+0.1)/100)+")";
+      ctx.fillStyle="rgba(255, 100, 0, "+(Math.floor(self.oxygen*100*0.7+0.1)/100)+")";
       ctx.globalCompositeOperation = "lighter";
       ctx.beginPath();
-      ctx.arc(0, 0, self.size*camera.scale, 0, Math.PI*2);
+      ctx.arc(0, 0, self.size*scale, 0, Math.PI*2);
       ctx.fill();
       ctx.restore();
     }
