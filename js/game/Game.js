@@ -5,7 +5,6 @@
   ;
 
   var b2Vec2 = Box2D.Common.Math.b2Vec2
-  , b2ContactListener = Box2D.Dynamics.b2ContactListener
   ;
 
   ns.Game = function (world, camera) {
@@ -26,31 +25,14 @@
 
     function start() {
       self.startTime = +new Date();
-      var contactListener = new b2ContactListener;
-      // FIXME: move to player ?
-      contactListener.BeginContact = function (contact) {
-        var aData = contact.GetFixtureA().GetBody().GetUserData();
-        var bData = contact.GetFixtureB().GetBody().GetUserData();
-
-        // TODO
-        /*
-        if (bData && bData.type=="player") {
-          self.player.onContact(contact);
+      world.bindCollision(self.player.body, "candle", function (playerBody, candleBody, playerData, candleData) {
+        if (self.player.oxygen>0 && !candleData.lighted) {
+          candleData.lighted = true;
+          candleBody.SetUserData(candleData);
+          ++ self.candleCount;
+          self.E.pub("lightCandle", { body: candleBody });
         }
-        */
-        if (aData && bData) {
-          if (aData.type=="candle" && bData.type=="player") {
-            if (self.player.oxygen && !aData.lighted) {
-              aData.lighted = true;
-              var candle = contact.GetFixtureA().GetBody();
-              candle.SetUserData(aData);
-              ++ self.candleCount;
-              self.E.pub("lightCandle", { body: candle });
-            }
-          }
-        }
-      }
-      self.world.world.SetContactListener(contactListener);
+      });
     }
 
     function won () {

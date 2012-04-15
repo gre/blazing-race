@@ -11,6 +11,7 @@
   , b2Transform = Box2D.Common.Math.b2Transform
   ,	b2Body = Box2D.Dynamics.b2Body
   ,	b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape
+  , b2ContactListener = Box2D.Dynamics.b2ContactListener
   ;
 
 
@@ -85,6 +86,32 @@
         }
       }
     }
+
+    var collisionBound = [];
+
+    // Bind a collision between a given body 
+    // and another object having objectType in user data
+    self.bindCollision = function (body, objectType, onContact) {
+      collisionBound.push(arguments);
+    }
+
+    var contactListener = new b2ContactListener;
+    contactListener.BeginContact = function (contact) {
+      var aBody = contact.GetFixtureA().GetBody();
+      var bBody = contact.GetFixtureB().GetBody();
+      var aData = aBody.GetUserData();
+      var bData = bBody.GetUserData();
+
+      for (var i = 0; i < collisionBound.length; ++i) {
+        var c = collisionBound[i];
+        if( aBody === c[0] && bData && bData.type == c[1] )
+          c[2](aBody, bBody, aData, bData);
+        if( bBody === c[0] && aData && aData.type == c[1] )
+          c[2](bBody, aBody, bData, aData);
+      }
+    }
+    self.world.SetContactListener(contactListener);
+
 
     var groundFixDef = new b2FixtureDef;
     groundFixDef.density = 1.0;
