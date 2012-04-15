@@ -262,7 +262,6 @@
     var POWER_CIRCLE_LINEWIDTH = 0.1;
     var POWER_CIRCLE_COLOR = 'rgba(220,200,150,0.5)';
     function drawPowerCircle (ctx, camera) {
-      //var pos = self.getPosition();
       var pos = camera.realPositionToCanvas(self.getPosition());
       var mouseP = self.controls.getCursorPosition && self.controls.getCursorPosition();
       var power = self.power;

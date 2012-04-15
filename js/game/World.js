@@ -80,6 +80,7 @@
 
     function shapesCollideWithBody (shapes, body, halfBody) {
       var t = new b2Transform();
+      var bodyT = body.GetTransform();
       t.SetIdentity();
       for (var f=body.GetFixtureList(); f; f=f.GetNext()) {
         var s = f.GetShape();
@@ -90,7 +91,7 @@
         }
         for (var i = 0; i < shapes.length; ++i) {
           var sh = shapes[i];
-          if (b2Shape.TestOverlap(sh, t, s, body.GetTransform()))
+          if (b2Shape.TestOverlap(sh, t, s, bodyT))
             return true;
         }
       }
