@@ -6,18 +6,19 @@
 
   var b2Vec2 = Box2D.Common.Math.b2Vec2;
 
-  ns.Camera = function (world, _width, _height, _scale) {
+  ns.Camera = function (world, _width, _height) {
     var self = this;
     // non normalized position
     self.x = 0;
     self.y = 0;
     self.width = _width;
     self.height = _height;
-    self.scale = _scale || 30;
+    self.scale = 30;
 
     self.resize = function (w, h) {
       self.width = w;
       self.height = h;
+      self.scale = clamp(10, 40, Math.round((w+h)/60));
     }
 
     self.E = makeEvent({});
