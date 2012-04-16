@@ -78,9 +78,16 @@ nav {
   text-align: left;
 }
 nav a {
-  background: #000;
+  color: #000;
+  background: #c50;
   padding: 1px 6px;
   border-radius: 8px;
+  text-decoration: none;
+  border: 4px solid #000;
+}
+nav a:hover {
+  color: #000;
+  border-color: transparent;
 }
 
 .stage {
