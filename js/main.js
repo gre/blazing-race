@@ -4,7 +4,7 @@
  * Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>
  * 2012
  */
-$(function(){
+(function(){
 
   var GameRecorder = BlazingRace.GameRecorder
   , Player = BlazingRace.Player
@@ -17,12 +17,16 @@ $(function(){
   , Renderer = BlazingRace.Renderer
   ;
 
-(function main () {
+function stage (id) {
+  $('#'+id).show().siblings('.stage').hide();
+}
+
+function main () {
   var isMobile = /ipad|iphone|android/i.test(navigator.userAgent);
   var node = $("#game");
-
   var level = "poc";
 
+  stage('loader');
   $.getJSON("maps/"+level+".json", function (map) {
     var W = node.width();
     var H = node.height();
@@ -33,17 +37,23 @@ $(function(){
       coal: "images/coal.png",
       candleOff: "images/candle-off.png",
       candleOn: "images/candle-on.png"
+    }, 5445395); // output of wc -c
+
+    loader.E.sub("progress", function (p) {
+      $("#loader .loader").
+        attr("max", p.total).
+        attr("value", p.value);
     });
 
-    var loadInterval = setInterval(function() {
-      $('.front .value').text(Math.floor(loader.progress()*100)+"%");
-    }, 100);
-    
-    $('canvas').hide();
+    loader.E.sub("error", function (e) {
+      $('#loader h2').text("Loading failed... Try to reload");
+      $("#loader .error").append($("<li />").text(e.msg));
+    });
+
+    loader.start();
 
     loader.ready(function(){
-      clearInterval(loadInterval);
-      $('canvas').show();
+      stage('game');
 
       // FIXME : some constructor should not depends on other components, try to avoid almost all dependencies and use loosely coupled events
       // TODO new Map(map);
@@ -89,6 +99,23 @@ $(function(){
 
   });
 
-}());
+}
 
+stage('menu');
+
+$('nav .menu').click(function (e) {
+  e.preventDefault();
+  stage('menu');
 });
+
+$('#menu .timeTrial').click(function (e) {
+  e.preventDefault();
+  stage('timeTrial');
+});
+
+$('#timeTrial .level').click(function (e) {
+  e.preventDefault();
+  main($(this).find("title").attr("data-levelName"));
+});
+
+}());

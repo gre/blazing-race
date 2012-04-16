@@ -190,7 +190,7 @@
           for (var i = 0; i<value.length; ++i) {
             var raw = value[i];
             var x = raw.x, y = raw.y;
-            fixDef.shape.SetAsBox(0.4, 0.5);
+            fixDef.shape.SetAsBox(0.4, 0.6);
             bodyDef.position.Set(x, y);
             var body = world.CreateBody(bodyDef);
             body.SetUserData({ type: "candle" });

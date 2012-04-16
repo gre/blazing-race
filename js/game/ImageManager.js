@@ -1,41 +1,72 @@
 (function(ns){
+  var makeEvent = BlazingRace.util.makeEvent
+  ;
+
   // TODO : setResource , a { name: path, name: path } would be better
-   ns.ImageManager =  function (images) {
+   ns.ImageManager =  function (images, totalBytes) {
     var self = this;
-    var count = 0;
-    var onloaded = function () {};
+    var version = window.VERSION || 1;
+
+    self.E = makeEvent({});
 
     var resources = {};
 
-    var version = window.VERSION || 1;
+    var countLoaded = 0;
+    var countTotal = 0; 
+    var loadeds = [];
+    for (var name in images) { 
+      ++ countTotal;
+      loadeds.push(0);
+    }
 
-    var nb = 0;
-    for (var name in images) { ++ nb }
+    self.start = function () {
+      var i = 0;
+      for (var name in images) { (function(i, name){
+        var src = images[name]+"?v="+version;
+        var req = new XMLHttpRequest();  
+        req.addEventListener("progress", function (e) {
+          loadeds[i] = e.loaded;
+          pubProgress();
+        }, false);  
+        req.addEventListener("load", function (e) {
+          // loadeds[i] = e.loaded;
+          var img = document.createElement("img");
+          img.onload = function () {
+            ++ countLoaded;
+            pubProgress();
+            if (self.isReady()) {
+              self.E.pub("loaded");
+              self.E.del("loaded");
+            }
+          }
+          img.src = src;
+          resources[name] = img;
+        }, false);  
+        req.addEventListener("error", function (e) {
+          self.E.pub("error", { msg: "load error for "+src });
+        }, false);  
+        req.open("GET", src, true);  
+        req.send();
 
-    for (var name in images) {
-      var img = new Image();
-      img.onload = function () {
-        ++ count;
-        if (self.isReady())
-          onloaded();
+        }(i++, name));
       }
-      img.src = images[name]+"?v="+version;
-      resources[name] = img;
     }
 
     self.isReady = function () {
-      return count == nb;
+      return countLoaded == countTotal;
     }
 
     self.ready = function (callback) {
       if (self.isReady())
         callback();
-      else
-        onloaded = callback;
+      else {
+        self.E.sub("loaded", callback);
+      }
     }
 
-    self.progress = function () {
-      return count / nb;
+    function pubProgress () {
+      var value=0; for(var i=0;i<loadeds.length;++i) value+=loadeds[i];
+      self.E.pub("progress", { value: value, total: totalBytes });
     }
 
     self.getResource = function (name) {
