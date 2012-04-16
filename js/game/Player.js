@@ -7,6 +7,7 @@
   ,	b2BodyDef = Box2D.Dynamics.b2BodyDef
   ,	b2Body = Box2D.Dynamics.b2Body
   ,	b2CircleShape = Box2D.Collision.Shapes.b2CircleShape
+  , b2Vec2 = Box2D.Common.Math.b2Vec2
   ;
 
   ns.Player = function (game, _x, _y, _controls, _camera) {
@@ -132,7 +133,8 @@
     }
 
     self.consumePower = function (intensity) {
-      var powerUsage = self.power * intensity;
+      var p = intensity*(2-intensity); // quadratic ease out
+      var powerUsage = self.power * p;
       self.power -= powerUsage;
       lastPowerUse = +new Date();
       lastPowerUseRemaining = self.power;
@@ -141,6 +143,7 @@
 
     self.reignition = function () {
       self.body.SetPosition(self.rez);
+      self.body.ApplyImpulse(new b2Vec2(0, -0.001), self.getPosition());
       self.ignition();
     }
 

@@ -28,7 +28,7 @@
     self.E = makeEvent({});
 
     var fluid = new b2BuoyancyController();
-    fluid.density = 1.1;
+    fluid.density = 1.2;
     fluid.offset = 0;
     self.waterController = fluid;
     self.world.AddController(fluid);
@@ -78,24 +78,25 @@
       }
     }
 
-    function shapesCollideWithBody (shapes, body, halfBody) {
-      var t = new b2Transform();
+    function shapesCollideWithBody (shapes, body, onlyCheckBodyPosition) {
+      var tId = new b2Transform(); tId.SetIdentity();
       var bodyT = body.GetTransform();
-      t.SetIdentity();
-      for (var f=body.GetFixtureList(); f; f=f.GetNext()) {
-        var s = f.GetShape();
-        // hacky..
-        if (halfBody) {
-          var aabb = f.GetAABB();
-          t.position = new b2Vec2(0, (aabb.lowerBound.y-aabb.upperBound.y)/2);
-        }
-        for (var i = 0; i < shapes.length; ++i) {
-          var sh = shapes[i];
-          if (b2Shape.TestOverlap(sh, t, s, bodyT))
+      if (onlyCheckBodyPosition) {
+        var p = body.GetPosition();
+        for (var i = 0; i < shapes.length; ++i)
+          if (shapes[i].TestPoint(tId, p))
             return true;
-        }
+        return false;
       }
-      return false;
+      else {
+        for (var f=body.GetFixtureList(); f; f=f.GetNext()) {
+          var s = f.GetShape();
+          for (var i = 0; i < shapes.length; ++i)
+            if (b2Shape.TestOverlap(shapes[i], tId, s, bodyT))
+              return true;
+        }
+        return false;
+      }
     }
 
     self.checkArea = function (body, areaType, enter, leave) {
