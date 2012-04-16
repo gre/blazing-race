@@ -149,7 +149,6 @@
 
     self.ignition = function () {
       self.oxygen = 1;
-
       initParticles();
       self.E.pub("live");
     }

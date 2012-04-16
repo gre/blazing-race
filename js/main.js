@@ -21,10 +21,9 @@ function stage (id) {
   $('#'+id).show().siblings('.stage').hide();
 }
 
-function main () {
+function main (level) {
   var isMobile = /ipad|iphone|android/i.test(navigator.userAgent);
   var node = $("#game");
-  var level = "poc";
 
   stage('loader');
   $.getJSON("maps/"+level+".json", function (map) {
@@ -68,10 +67,21 @@ function main () {
 
       // TODO I like these lines, need to rewrite lot of things like this:
 
+      var gameRunning = false;
       game.E.sub("started", function (i) {
+        gameRunning = true;
         controls.start();
       });
       game.E.sub("stopped", function (i) {
+        gameRunning = false;
+        controls.stop();
+      });
+
+      player.E.sub("live", function (i) {
+        if (gameRunning)
+          controls.start();
+      });
+      player.E.sub("die", function (i) {
         controls.stop();
       });
 
@@ -87,8 +97,8 @@ function main () {
 
       var lastWidth, lastHeight;
       $(window).resize(function () {
-        var w = Math.max(250, $(window).width()-1);
-        var h = Math.max(200, $(window).height()-30);
+        var w = Math.max(250, Math.floor($(window).width()-1));
+        var h = Math.max(200, Math.floor($(window).height()-1));
         if (w !== lastWidth || h !== lastHeight) {
           node.width(w).height(h);
           camera.resize(w, h);
@@ -115,7 +125,7 @@ $('#menu .timeTrial').click(function (e) {
 
 $('#timeTrial .level').click(function (e) {
   e.preventDefault();
-  main($(this).find("title").attr("data-levelName"));
+  main($(this).attr("data-levelName"));
 });
 
 }());
