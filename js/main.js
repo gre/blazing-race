@@ -41,7 +41,8 @@ function main (level) {
     loader.E.sub("progress", function (p) {
       $("#loader .loader").
         attr("max", p.total).
-        attr("value", p.value);
+        attr("value", p.value).
+        text(Math.round(100*p.value/p.total)+" %");
     });
 
     loader.E.sub("error", function (e) {
