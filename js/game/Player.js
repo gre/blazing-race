@@ -10,8 +10,7 @@
   , b2Vec2 = Box2D.Common.Math.b2Vec2
   ;
 
-  ns.Player = function (game, _x, _y, _controls, _camera) {
-    var world = game.world;
+  ns.Player = function (world, _x, _y) {
     var self = this;
     self.size = 0.5;
     self.body = createPlayerBody(self.size, _x, _y);
@@ -21,13 +20,13 @@
     self.E = makeEvent({});
     self.noOxygenArea = false;
 
-    self.controls = _controls;
-    self.camera = _camera;
     self.oxygen = 1;
     self.power = 1;
 
     self.rez = self.body.GetPosition().Copy();
     self.MAX_DIST = 5;
+
+    self.cursor = null;
 
     var pe;
 
@@ -98,16 +97,15 @@
       }
     });
 
-    self.controls.E.sub("usePower", function (canvasPosition) {
-      var position = self.body.GetPosition();
-      var force = self.getVector(self.camera.canvasToRealPosition(canvasPosition));
+    self.usePower = function (forceVector) {
+      var force = forceVector.Copy();
       var dist = force.Normalize();
       var intensity = self.getIntensity(dist);
       var power = self.consumePower(intensity);
-
       force.Multiply(power);
+      var position = self.body.GetPosition();
       self.body.ApplyImpulse(force, position);
-    });
+    }
 
     self.getVector = function (point) {
       var position = self.body.GetPosition();
@@ -118,6 +116,10 @@
 
     self.getPosition = function () {
       return self.body.GetPosition();
+    }
+
+    self.setCursor = function (position) {
+      self.cursor = position;
     }
 
     self.start = function () {
@@ -159,9 +161,47 @@
       self.E.pub("die");
     }
 
-
     // RENDERING
-    var PARTICLE_SIZE = 1.1
+
+
+    // Ball Rendering
+
+    self.getBallRenderable = function(){ 
+      var loader;
+      var coal;
+      function generateCoal (scale) {
+        coal = loader.getResource("coal", 2*self.size*scale, 2*self.size*scale);
+      }
+      function drawPlayer (ctx, camera) {
+        var scale = camera.scale;
+        if (self.noOxygenArea) {
+          scale += camera.scale * 0.1 * (Math.sin((+new Date() - lastEnteredInNoOxygen)/150));
+        }
+        ctx.save();
+        var p = camera.realPositionToCanvas(self.getPosition());
+        ctx.translate(p.x, p.y);
+        ctx.rotate(-self.body.GetAngle());
+        ctx.drawImage(coal, Math.round(-coal.width/2), Math.round(-coal.height/2));
+        ctx.fillStyle="rgba(255, 100, 0, "+(Math.floor(self.oxygen*100*0.7+0.1)/100)+")";
+        ctx.globalCompositeOperation = "lighter";
+        ctx.beginPath();
+        ctx.arc(0, 0, self.size*scale, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+      }
+      return {
+        render: drawPlayer,
+        setup: function (l, camera) {
+          loader = l;
+          generateCoal(camera.scale);
+          camera.E.sub("scale", generateCoal);
+        }
+      }
+    };
+
+    // Flame Rendering
+
+    var PARTICLE_SIZE = 1.1;
     var PARTICLE_LIFESPAN = 14;
 
     function getPeSize (camera) {
@@ -176,10 +216,10 @@
       pe.lifeSpanRandom = 1;
       pe.position.x = -1000;
       pe.position.y = -1000;
-	    pe.startColour = [ 240, 208, 68, 1 ];
-	    pe.startColourRandom = [ 40, 40, 60, 0 ];
-	    pe.finishColour = [ 245, 35, 0, 0 ];  
-	    pe.finishColourRandom = [ 20, 20, 20, 0 ];
+      pe.startColour = [ 240, 208, 68, 1 ];
+      pe.startColourRandom = [ 40, 40, 60, 0 ];
+      pe.finishColour = [ 245, 35, 0, 0 ];  
+      pe.finishColourRandom = [ 20, 20, 20, 0 ];
       if (camera) {
         pe.gravity = { x: 0, y: -0.02*camera.scale };
         pe.size = getPeSize(camera);
@@ -190,129 +230,163 @@
         pe.sharpnessRandom = .1*camera.scale;
         pe.positionRandom = { x: 0.1*camera.scale, y: 0.1*camera.scale };
       }
-		  pe.init();
+      pe.init();
     }
-  
-    var lastEmit = 0;
-    function drawFlame (ctx, camera) {
-      ctx.save();
-      var p = self.getPosition();
-      ctx.globalCompositeOperation = "lighter";
 
-      if (pe.size != getPeSize(camera)) {
-        initParticles(camera);
+    self.getFlameRenderable = function(){
+ 
+      var lastEmit = 0;
+      function drawFlame (ctx, camera) {
+        ctx.save();
+        var p = self.getPosition();
+        ctx.globalCompositeOperation = "lighter";
+
+        if (pe.size != getPeSize(camera)) {
+          initParticles(camera);
+        }
+
+        p = camera.realPositionToCanvas(p);
+        var now = +new Date();
+        if (now >= lastEmit + 25) {
+          pe.lifeSpan = Math.round(1+self.power*(PARTICLE_LIFESPAN-1));
+          pe.position.x = p.x-0.65*camera.scale-camera.x;
+          pe.position.y = p.y-0.55*camera.scale+camera.y;
+          pe.update(self.noOxygenArea ? 0 : 1); // FIXME: instead duration=-1 when enter, initParticles() when leave
+          lastEmit = now;
+        }
+        ctx.translate(camera.x, -camera.y);
+        pe.renderParticles(ctx);
+        ctx.restore();
       }
-
-      p = camera.realPositionToCanvas(p);
-      var now = +new Date();
-      if (now >= lastEmit + 25) {
-        pe.lifeSpan = Math.round(1+self.power*(PARTICLE_LIFESPAN-1));
-        pe.position.x = p.x-0.65*camera.scale-camera.x;
-        pe.position.y = p.y-0.55*camera.scale+camera.y;
-        pe.update(self.noOxygenArea ? 0 : 1);
-        lastEmit = now;
-      }
-      ctx.translate(camera.x, -camera.y);
-      pe.renderParticles(ctx);
-      ctx.restore();
-    }
-
-
-    var coalImg;
-    var coal = $('<canvas></canvas>')[0], 
-    coalCtx = coal.getContext("2d");
-
-    function generateCoal (scale) {
-      var x, y;
-      coal.width = 2* self.size * scale;
-      coal.height = 2* self.size * scale;
-      coalCtx.drawImage(coalImg,
-          0, 0, coalImg.width, coalImg.height,
-          0, 0, coal.width, coal.height);
-    }
-
-    var lastScaleCoal;
-    function generateCoalIfChanged (scale) {
-      if (scale !== lastScaleCoal) {
-        lastScaleCoal = scale;
-        generateCoal(scale);
-      }
-    }
-
-    function drawPlayer (ctx, camera) {
-      var scale = camera.scale;
-      if (self.noOxygenArea) {
-        scale += camera.scale * 0.1 * (Math.sin((+new Date() - lastEnteredInNoOxygen)/150));
-      }
-      generateCoalIfChanged(scale);
-      ctx.save();
-      var p = camera.realPositionToCanvas(self.getPosition());
-      ctx.translate(p.x, p.y);
-      ctx.rotate(-self.body.GetAngle());
-      ctx.drawImage(coal, Math.round(-coal.width/2), Math.round(-coal.height/2));
-      ctx.fillStyle="rgba(255, 100, 0, "+(Math.floor(self.oxygen*100*0.7+0.1)/100)+")";
-      ctx.globalCompositeOperation = "lighter";
-      ctx.beginPath();
-      ctx.arc(0, 0, self.size*scale, 0, Math.PI*2);
-      ctx.fill();
-      ctx.restore();
-    }
-
+      return {
+      render: drawFlame
+    }};
     
-    var POWER_CIRCLE_OPEN = 0.05 * Math.PI;
-    var POWER_CURSOR_SIZE = 0.25;
-    var POWER_CIRCLE_LINEWIDTH = 0.1;
-    var POWER_CIRCLE_COLOR = 'rgba(220,200,150,0.5)';
-    function drawPowerCircle (ctx, camera) {
-      var pos = camera.realPositionToCanvas(self.getPosition());
-      var mouseP = self.controls.getCursorPosition && self.controls.getCursorPosition();
-      var power = self.power;
-      var powerDist = power * self.MAX_DIST;
-      var p, dist, intensity;
-      var fromAngle, toAngle;
 
-      if (mouseP) {
-        p = self.getVector(self.camera.canvasToRealPosition(mouseP));
-        dist = p.Normalize();
-        intensity = Math.min(self.getIntensity(dist), self.power);
-        fromAngle = Math.atan2(-p.y, p.x) + POWER_CIRCLE_OPEN/2;
-        toAngle = fromAngle + 2*Math.PI - POWER_CIRCLE_OPEN;
-      }
-      else {
-        intensity = power;
-        fromAngle = 0;
-        toAngle = 2*Math.PI;
-      }
-      var intensityDist = intensity * self.MAX_DIST;
+    // Controls Rendering
 
-      ctx.save();
-      ctx.strokeStyle = POWER_CIRCLE_COLOR;
-      ctx.fillStyle = POWER_CIRCLE_COLOR;
-      ctx.translate(pos.x, pos.y);
-      ctx.beginPath();
-      ctx.lineWidth = power * POWER_CIRCLE_LINEWIDTH * camera.scale;
-      ctx.arc(0, 0, powerDist*camera.scale, fromAngle, toAngle);
-      ctx.stroke();
+    self.getControlsRenderable = function () {
+      
+      var POWER_CIRCLE_OPEN = 0.05 * Math.PI;
+      var POWER_CURSOR_SIZE = 0.25;
+      var POWER_CIRCLE_LINEWIDTH = 0.1;
+      var POWER_CIRCLE_COLOR = 'rgba(220,200,150,0.5)';
+      
+      function drawPowerCircle (ctx, camera) {
+        var pos = camera.realPositionToCanvas(self.getPosition());
+        var mouseP = self.cursor;
+        var power = self.power;
+        var powerDist = power * self.MAX_DIST;
+        var p, dist, intensity;
+        var fromAngle, toAngle;
 
-      if (p) {
+        if (mouseP) {
+          p = self.getVector(camera.canvasToRealPosition(mouseP));
+          dist = p.Normalize();
+          intensity = Math.min(self.getIntensity(dist), self.power);
+          fromAngle = Math.atan2(-p.y, p.x) + POWER_CIRCLE_OPEN/2;
+          toAngle = fromAngle + 2*Math.PI - POWER_CIRCLE_OPEN;
+        }
+        else {
+          intensity = power;
+          fromAngle = 0;
+          toAngle = 2*Math.PI;
+        }
+        var intensityDist = intensity * self.MAX_DIST;
+
+        ctx.save();
+        ctx.strokeStyle = POWER_CIRCLE_COLOR;
+        ctx.fillStyle = POWER_CIRCLE_COLOR;
+        ctx.translate(pos.x, pos.y);
         ctx.beginPath();
-        ctx.arc(intensityDist*p.x*camera.scale, -intensityDist*p.y*camera.scale, intensity*POWER_CURSOR_SIZE*camera.scale, 0, 2*Math.PI);
-        ctx.fill();
+        ctx.lineWidth = power * POWER_CIRCLE_LINEWIDTH * camera.scale;
+        ctx.arc(0, 0, powerDist*camera.scale, fromAngle, toAngle);
+        ctx.stroke();
+
+        if (p) {
+          ctx.beginPath();
+          ctx.arc(intensityDist*p.x*camera.scale, -intensityDist*p.y*camera.scale, intensity*POWER_CURSOR_SIZE*camera.scale, 0, 2*Math.PI);
+          ctx.fill();
+        }
+
+        ctx.restore();
       }
 
-      ctx.restore();
+      return {
+        render: function (ctx, camera) {
+          self.cursor && drawPowerCircle(ctx, camera);
+        }
+      }
+    };
+
+    // Candles indicator rendering
+    
+    self.getCandlesIndicatorRenderable = function (candles) {
+
+      var loader;
+      var CANDLE_W, CANDLE_H;
+
+      function drawCandleIndicator (ctx, candle, camera, i) {
+        var position = candle.GetPosition();
+        var fixture = candle.GetFixtureList();
+        var lighted = fixture.GetBody().GetUserData().lighted;
+        if (lighted) return;
+
+        var p = camera.realPositionToCanvas(position);
+        var w = ctx.canvas.width;
+        var h = ctx.canvas.height;
+
+        var visible = (function (x, y) {
+          return -CANDLE_W/2 < x && x < w+CANDLE_W/2 && 
+                -CANDLE_H/2 < y && y < h+CANDLE_H/2;
+        }(p.x, p.y));
+
+        if (visible) return;
+
+        var playerPosition = self.getPosition();
+        var v = candle.GetPosition().Copy();
+        v.Subtract(playerPosition);
+        var dist = v.Normalize();
+        var mindist = 3*new b2Vec2(camera.width/camera.scale, camera.height/camera.scale).Normalize();
+        var size = 40*(1-1.2*smoothstep(0, mindist, dist));
+
+        if (size > 0) {
+          var p = camera.projectOnBounds(playerPosition, v, size+5);
+          if (p) {
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(Math.atan2(v.y, v.x));
+            ctx.fillStyle = 'rgba(240, 210, 100, 0.8)';
+            ctx.beginPath();
+            ctx.moveTo(0, -size/4);
+            ctx.lineTo(0, size/4);
+            ctx.lineTo(size, 0);
+            ctx.fill();
+            ctx.restore();
+          }
+        }
+      }
+
+      function computeSize (scale) {
+        var img = loader.getResource("candleOn");
+        CANDLE_W = scale;
+        CANDLE_H = Math.floor(CANDLE_W*img.height/img.width);
+      }
+
+      return {
+        render: function (ctx, camera) {
+          for (var i = 0; i < candles.length; ++i) {
+            drawCandleIndicator(ctx, candles[i], camera, i);
+          }
+        },
+        setup: function (l, camera) {
+          loader = l;
+          computeSize(camera.scale);
+          camera.E.sub("scale", computeSize);
+        }
+      }
     }
 
-    self.setup = function (loader) {
-      coalImg = loader.getResource("coal");
-    }
-
-    self.renderControls = function (ctx, camera) {
-      if (self.controls.isActive())
-        drawPowerCircle(ctx, camera);
-    }
-    self.renderBall = drawPlayer;
-    self.renderFlame = drawFlame;
   }
 
 }(window.BlazingRace));

@@ -12,14 +12,15 @@
   ,	b2Body = Box2D.Dynamics.b2Body
   ,	b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape
   , b2ContactListener = Box2D.Dynamics.b2ContactListener
+  , smoothstep = BlazingRace.util.smoothstep
   ;
 
 
   ns.World = function (_map) {
     var self = this;
-    self.map = _map;
-    self.width = _map.width;
-    self.height = _map.height;
+    self.map = _map.data; // FIXME
+    self.width = self.map.width;
+    self.height = self.map.height;
     self.gravity = new b2Vec2(0, -10);
     self.world = new b2World(self.gravity, true);
 
@@ -208,8 +209,7 @@
       }
     }
 
-
-    var i = 0;
+    var i;
     function update() {
       self.world.Step(1 / 60, 10, 10);
       self.checkAreas();
@@ -217,10 +217,9 @@
       self.world.ClearForces();
     }
 
-    self.update = update;
-
     var loopInterval;
     self.start = function () {
+      i = 0;
       init(self.world);
       loopInterval = setInterval(update, 1000/60);
     }
@@ -229,73 +228,112 @@
     }
 
     // RENDERING
+    
+    // Background rendering
+    self.getBackgroundRenderable = function(){ 
+      var loader;
+      var mapBgTexture;
+      var parallax = { x: 0.7, y: 0.6 };
 
-    // map
-    var mapImg;
-
-    var mapTexture = $('<canvas></canvas>')[0], 
-        mapTextureCtx = mapTexture.getContext("2d");
-    function generateMapTexture (camera) {
-      mapTexture.width = self.width * camera.scale;
-      mapTexture.height = self.height * camera.scale;
-      mapTextureCtx.drawImage(mapImg, 
-          0, 0, mapImg.width, mapImg.height,
-          0, 0, mapTexture.width, mapTexture.height);
-    }
-
-    var lastScale;
-    function generateMapTextureIfChanged (camera) {
-      if (camera.scale !== lastScale) {
-        lastScale = camera.scale;
-        generateMapTexture(camera);
+      function generateMapBgTexture (scale) {
+        mapBgTexture = loader.getResource("map_background", self.width*scale, self.height*scale);
       }
-    }
-
-    // map background
-    var mapBgImg;
-    var mapBgTexture = $('<canvas></canvas>')[0], 
-        mapBgTextureCtx = mapBgTexture.getContext("2d");
-    var parallax = { x: 0.7, y: 0.6 };
-    function generateMapBgTexture (camera) {
-      var x, y;
-      mapBgTexture.width = self.width * camera.scale;
-      mapBgTexture.height = self.height * camera.scale;
-      for (x=0; x<mapBgTexture.width; x += mapBgImg.width) {
-        for (y=0; y<mapBgTexture.height; y += mapBgImg.height) {
-          mapBgTextureCtx.drawImage(mapBgImg, x, y);
+      
+      return {
+        render: function (ctx, camera) {
+          ctx.save();
+          camera.translateContextWithParallax(ctx, parallax.x, parallax.y);
+          ctx.drawImage(mapBgTexture, 0, 0);
+          ctx.restore();
+        },
+        setup: function (l, camera) {
+          loader = l;
+          generateMapBgTexture(camera.scale);
+          camera.E.sub("scale", generateMapBgTexture);
         }
       }
-    }
+    };
 
-    var lastScaleBg;
-    function generateMapBgTextureIfChanged (camera) {
-      if (camera.scale !== lastScaleBg) {
-        lastScaleBg = camera.scale;
-        generateMapBgTexture(camera);
+    // Map rendering
+    self.getMapRenderable = function(){
+      var loader;
+      var mapTexture;
+
+      function generateMapTexture (scale) {
+        mapTexture = loader.getResource("map", scale*self.width, scale*self.height);
       }
-    }
+      return {
+        render: function (ctx, camera) {
+          ctx.save();
+          camera.translateContext(ctx);
+          ctx.drawImage(mapTexture, 0, 0);
+          ctx.restore();
+        },
+        setup: function (l, camera) {
+          loader = l;
+          generateMapTexture(camera.scale);
+          camera.E.sub("scale", generateMapTexture);
+        }
+      }
+    };
 
-    self.setup = function (loader) {
-      mapImg = loader.getResource("map");
-      mapBgImg = loader.getResource("map_background");
-    }
+    // Candles rendering
+    self.getCandlesRenderable = function(){
 
-    self.renderBackground = function (ctx, camera) {
-      generateMapBgTextureIfChanged(camera);
-      ctx.save();
-      camera.translateContextWithParallax(ctx, parallax.x, parallax.y);
-      ctx.drawImage(mapBgTexture, 0, 0);
-      ctx.restore();
-    }
+      var candleOn, candleOff;
+      var loader;
 
-    self.renderMap = function (ctx, camera) {
-      generateMapTextureIfChanged(camera);
-      ctx.save();
-      camera.translateContext(ctx);
-      ctx.drawImage(mapTexture, 0, 0);
-      ctx.restore();
-    }
-    
+      function generateCandle (scale) {
+        var img = loader.getResource("candleOn");
+        var w = scale;
+        var h = Math.floor(w*img.height/img.width);
+        candleOn = loader.getResource("candleOn", w, h);
+        candleOff = loader.getResource("candleOff", w, h);
+      }
+
+      function drawCandle (ctx, candle, camera, i) {
+        var position = candle.GetPosition();
+        var fixture = candle.GetFixtureList();
+        var lighted = fixture.GetBody().GetUserData().lighted;
+
+        var p = camera.realPositionToCanvas(position);
+        var w = ctx.canvas.width;
+        var h = ctx.canvas.height;
+
+        var visible = (function (x, y) {
+          return -candleOn.width/2 < x && x < w+candleOn.width/2 && 
+                -candleOn.height/2 < y && y < h+candleOn.height/2;
+        }(p.x, p.y));
+
+        if (visible) {
+          ctx.save();
+          ctx.translate(Math.floor(p.x-candleOn.width/2), Math.floor(p.y+candleOn.width/2-candleOn.height));
+          if (lighted) {
+            ctx.fillStyle = 'rgb(255, 200, 150)';
+            ctx.drawImage(candleOn, 0, 0);
+          }
+          else {
+            ctx.fillStyle = 'rgb(200, 170, 160)';
+            ctx.drawImage(candleOff, 0, 0);
+          }
+          ctx.restore();
+        }
+      }
+
+      return {
+        render: function (ctx, camera) {
+          for (var i = 0; i < self.candles.length; ++i) {
+            drawCandle(ctx, self.candles[i], camera, i);
+          }
+        },
+        setup: function (l, camera) {
+          loader = l;
+          generateCandle(camera.scale);
+          camera.E.sub("scale", generateCandle);
+        }
+      }
+    };
+
   }
 
 }(window.BlazingRace));

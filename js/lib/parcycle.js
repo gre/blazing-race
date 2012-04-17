@@ -177,12 +177,21 @@ function cParticleEmitter(){
 			var halfSize = size >> 1;
 			var x = ~~particle.position.x;
 			var y = ~~particle.position.y;
-					
-			var radgrad = context.createRadialGradient( x + halfSize, y + halfSize, particle.sizeSmall, x + halfSize, y + halfSize, halfSize);  
+		  
+      var radgrad;
+      if (particle.radgrad && particle.radgradColor == particle.drawColour) {
+        radgrad = particle.radgrad;
+      }
+      else {
+			radgrad = context.createRadialGradient( x + halfSize, y + halfSize, particle.sizeSmall, x + halfSize, y + halfSize, halfSize);  
 			radgrad.addColorStop( 0, particle.drawColour );   
 			radgrad.addColorStop( 1, 'rgba(0,0,0,0)' ); //Super cool if you change these values (and add more colour stops)
+      particle.radgrad = radgrad;
+       particle.radgradColor = particle.drawColour;
+      }
 			context.fillStyle = radgrad;
-		  	context.fillRect( x, y, size, size );
+      //context.fillStyle='red'
+      context.fillRect( x, y, size, size );
 		}
 	};	
 }

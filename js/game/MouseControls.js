@@ -20,6 +20,7 @@
       if (y !== undefined) {
         position.y = y-(o.top-$(window).scrollTop());
       }
+      self.E.pub("position", position);
     }
 
     function getPosition () {
@@ -37,20 +38,16 @@
       self.E.pub("usePower", getPosition());
     }
 
-    self.isActive = function () {
-      return started;
-    }
-
     self.start = function () {
-      started = true;
       node.on("mousemove", onMouseMove);
       node.on("mousedown", onMouseDown);
+      self.E.pub("started");
     }
 
     self.stop = function () {
-      started = false;
       node.off("mousemove", onMouseMove);
       node.off("mousedown", onMouseDown);
+      self.E.pub("stopped");
     }
   }
 

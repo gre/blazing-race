@@ -15,6 +15,7 @@
   , MouseControls = BlazingRace.MouseControls 
   , TouchControls = BlazingRace.TouchControls 
   , Renderer = BlazingRace.Renderer
+  , Map = BlazingRace.Map
   ;
 
 function stage (id) {
@@ -26,17 +27,12 @@ function main (level) {
   var node = $("#game");
 
   stage('loader');
-  $.getJSON("maps/"+level+".json", function (map) {
-    var W = node.width();
-    var H = node.height();
 
-    var loader = new ImageManager({
-      map_background: "maps/"+level+"_background.jpg",
-      map: "maps/"+level+".png",
-      coal: "images/coal.png",
-      candleOff: "images/candle-off.png",
-      candleOn: "images/candle-on.png"
-    }, 5445395); // output of wc -c
+  var map = new Map(level);
+
+  map.load(function (data) {
+
+    var loader = new ImageManager(map.getImages(), map.getImagesBytesLength());
 
     loader.E.sub("progress", function (p) {
       $("#loader .loader").
@@ -50,23 +46,40 @@ function main (level) {
       $("#loader .error").append($("<li />").text(e.msg));
     });
 
-    loader.start();
-
-    loader.ready(function(){
+    loader.load(function(){
       stage('game');
 
-      // FIXME : some constructor should not depends on other components, try to avoid almost all dependencies and use loosely coupled events
-      // TODO new Map(map);
       var world = new World(map);
-      var controls = isMobile ? new TouchControls(node) : new MouseControls(node);
-      var camera = new Camera(world, W, H);
-      var game = new Game(world, camera);
-      var rendering = new Renderer(game, W, H, node, loader);
+      var controls = isMobile ? new TouchControls(node) 
+                              : new MouseControls(node);
+      var camera = new Camera(true);
+      var game = new Game(world);
+      var rendering = new Renderer(node.find("canvas.game")[0]);
       var recorder = new GameRecorder(game);
-      var player = new Player(game, map.start[0].x, map.start[0].y, controls, camera);
-      game.player = player; // oh fuck!
+      var player = new Player(world, map.data.start[0].x, map.data.start[0].y);
 
-      // TODO I like these lines, need to rewrite lot of things like this:
+      camera.setWorldSize(world.width, world.height);
+
+      rendering.setLayers([
+        world.getBackgroundRenderable(),
+        player.getBallRenderable(),
+        player.getFlameRenderable(),
+        world.getMapRenderable(),
+        world.getCandlesRenderable(),
+        player.getCandlesIndicatorRenderable(world.candles),
+        player.getControlsRenderable()
+      ]);
+
+      var lastWidth, lastHeight;
+      $(window).resize(function () {
+        var w = Math.max(250, Math.floor($(window).width()));
+        var h = Math.max(200, Math.floor($(window).height()));
+        if (w !== lastWidth || h !== lastHeight) {
+          node.width(w).height(h);
+          camera.resize(w, h);
+          rendering.resize(w, h);
+        }
+      }).resize();
 
       var gameRunning = false;
       game.E.sub("started", function (i) {
@@ -76,6 +89,21 @@ function main (level) {
       game.E.sub("stopped", function (i) {
         gameRunning = false;
         controls.stop();
+      });
+
+      controls.E.sub("stopped", function (){
+        player.setCursor(null);
+      });
+      controls.E.sub("started", function (){
+        player.setCursor({ x: 0, y: 0 });
+      });
+
+      controls.E.sub("position", function (position) {
+        player.setCursor(position); 
+      });
+
+      controls.E.sub("usePower", function (canvasPosition) {
+        player.usePower( player.getVector(camera.canvasToRealPosition(canvasPosition)) );
       });
 
       player.E.sub("live", function (i) {
@@ -90,22 +118,122 @@ function main (level) {
         camera.focusOn(player.getPosition());
       });
 
-      world.start();
-      player.start();
-      rendering.start();
+
+      function won () {
+        return player.candleCount >= world.map.candles.length;
+      }
+      function checkGameState () {
+        if (won())
+          return 1;
+        if (player.isDead())
+          return -1;
+        return 0;
+      }
+
+      var lastSeconds, lastMinutes;
+      var $seconds = node.find(".chrono .seconds");
+      var $minutes = node.find(".chrono .minutes");
+      var countdownTime = +new Date();
+      var countdownRunning = false;
+      var ended = false;
+      var COUNTDOWN_DURATION = 3000;
+      function DOM_render () {
+        if (ended) return;
+        var duration = +new Date() - countdownTime - COUNTDOWN_DURATION;
+        if (duration < 0) {
+          if (!countdownRunning) {
+            countdownRunning = true;
+          }
+          countdown( -duration );
+        }
+        else {
+          if (countdownRunning) {
+            if (checkGameState() == -1) {
+              player.reignition();
+            }
+            else {
+              game.start();
+            }
+            countdown(-1);  
+            countdownRunning = false;
+          }
+          duration = +new Date() - game.startTime;
+          var seconds = Math.floor(duration / 1000) % 60;
+          var minutes = Math.floor(duration / 60000) % 60;
+          if (seconds != lastSeconds) {
+            $seconds.text(seconds<=9 ? "0"+seconds : seconds);
+            lastSeconds = seconds;
+          }
+          if (minutes != lastMinutes) {
+            $minutes.text(minutes);
+            lastMinutes = minutes;
+          }
+
+          var state = checkGameState();
+          if (state) {
+            if (state>0) {
+              ended = true;
+              win();
+            }
+            else {
+              lose();
+            }
+          }
+        }
+      }
+
+      var $end = node.find(".front");
+
+      var currentCount = null;
+      function countdown(ms) {
+        var seconds = Math.ceil(ms/1000);
+        if (seconds === currentCount) {
+          return;
+        }
+        currentCount = seconds;
+        if (seconds>0) {
+          $end.fadeIn();
+          $end.find(".value").remove();
+          $end.append('<div class="value">'+seconds+'</div>');
+          setTimeout(function(){
+            $end.find(".value").addClass("change");
+          }, 100);
+        }
+        else if (seconds<=0) {
+          $end.find(".message").empty();
+          $end.find(".value").empty();
+          $end.hide();
+        }
+      }
+
+      function win() {
+        $end.fadeIn().find(".message").text("All candles are lighted! You succeed!");
+        game.stop();
+      }
+
+      function lose() {
+        //game.stop();
+        setTimeout(function(){
+          $end.fadeIn().find(".message").text("Reignition...");
+          countdownTime = +new Date();
+        }, 500);
+      }
+
+      function start () {
+        world.start();
+        player.start();
+        rendering.start(camera, loader);
+
+        $end.show().find(".message").text("Ready?");
+        setInterval(function () {
+          DOM_render();
+        }, 100);
+      }
+
+      start();
 
       BlazingRace.game = game; // save the game for debugging
 
-      var lastWidth, lastHeight;
-      $(window).resize(function () {
-        var w = Math.max(250, Math.floor($(window).width()-1));
-        var h = Math.max(200, Math.floor($(window).height()-1));
-        if (w !== lastWidth || h !== lastHeight) {
-          node.width(w).height(h);
-          camera.resize(w, h);
-          rendering.resize(w, h);
-        }
-      }).resize();
     });
 
   });

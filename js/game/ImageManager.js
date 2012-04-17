@@ -2,7 +2,6 @@
   var makeEvent = BlazingRace.util.makeEvent
   ;
 
-  // TODO : setResource , a { name: path, name: path } would be better
    ns.ImageManager =  function (images, totalBytes) {
     var self = this;
     var version = window.VERSION || 1;
@@ -10,6 +9,7 @@
     self.E = makeEvent({});
 
     var resources = {};
+    var resourcesWithScales = {};
 
     var countLoaded = 0;
     var countTotal = 0; 
@@ -19,17 +19,17 @@
       loadeds.push(0);
     }
 
-    self.start = function () {
+    self.load = function (callback) {
+      self.E.sub("loaded", callback);
       var i = 0;
       for (var name in images) { (function(i, name){
-        var src = images[name]+"?v="+version;
+        var src = images[name].src+"?v="+version;
         var req = new XMLHttpRequest();  
         req.addEventListener("progress", function (e) {
           loadeds[i] = e.loaded;
           pubProgress();
         }, false);  
         req.addEventListener("load", function (e) {
-          // loadeds[i] = e.loaded;
           var img = document.createElement("img");
           img.onload = function () {
             ++ countLoaded;
@@ -56,21 +56,41 @@
       return countLoaded == countTotal;
     }
 
-    self.ready = function (callback) {
-      if (self.isReady())
-        callback();
-      else {
-        self.E.sub("loaded", callback);
-      }
-    }
-
     function pubProgress () {
       var value=0; for(var i=0;i<loadeds.length;++i) value+=loadeds[i];
       self.E.pub("progress", { value: value, total: totalBytes });
     }
 
-    self.getResource = function (name) {
-      return resources[name];
+    function resourceForScaleId (name, w, h) { return name+"@"+w+"x"+h }
+
+    function generateResourceForScale (name, w, h) {
+      var id = resourceForScaleId(name, w, h);
+      var img = resources[name];
+      var canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      var ctx = canvas.getContext("2d");
+      if (images[name].mode=="repeat") {
+        // repeat
+        for (x=0; x<canvas.width; x += img.width) {
+          for (y=0; y<canvas.height; y += img.height) {
+            ctx.drawImage(img, x, y);
+          }
+        }
+      }
+      else {
+        // scale
+        ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, canvas.width, canvas.height);
+      }
+      return resourcesWithScales[id] = canvas;
+    }
+
+    self.getResource = function (name, w, h) {
+      if (!w||!h) return resources[name];
+      w = Math.floor(w);
+      h = Math.floor(h);
+      var id = resourceForScaleId(name, w, h);
+      return resourcesWithScales[id] || generateResourceForScale(name, w, h);
     }
   }
 

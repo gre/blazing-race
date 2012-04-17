@@ -1,25 +1,33 @@
 <!DOCTYPE HTML>
 <html lang="en">
 <head>
-  <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1" />
-
-	<meta charset="UTF-8">
 	<title>Blazing Race</title>
+  
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+	<meta name="viewport" content="initial-scale=1.0,maximum-scale=1.0" />
 
   <link href='http://fonts.googleapis.com/css?family=Chau+Philomene+One' rel='stylesheet' type='text/css'>  
   <link rel="stylesheet" href="css/main.css" />
 
-  <script type="text/javascript">
-    //window.DEV_MODE = location.host.match("localhost");
+  <script src="js/lib/jquery-1.7.2.min.js" type="text/javascript"></script>
+	<script src="js/lib/viewporter.js"></script>  
+  	<script>
+		// orientation locking
+		$(window).bind('viewportready viewportchange', function() {
+			$('#orientationlock').toggle(!viewporter.isLandscape());
+		});
   </script>
 
-  <script src="js/lib/jquery-1.7.2.min.js" type="text/javascript"></script>
   <script src="js/lib/Box2dWeb-2.1.a.3.min.js" type="text/javascript"></script>
   <script src="js/lib/Stats.js" type="text/javascript"></script>
   <script src="js/lib/parcycle.js" type="text/javascript"></script>
   <script src="js/requestAnimFrame.js" type="text/javascript"></script>
   <script src="js/util.js" type="text/javascript"></script>
 
+  <script src="js/game/Map.js" type="text/javascript"></script>
   <script src="js/game/World.js" type="text/javascript"></script>
   <script src="js/game/Player.js" type="text/javascript"></script>
   <script src="js/game/Game.js" type="text/javascript"></script>
@@ -31,7 +39,7 @@
   <script src="js/game/MouseControls.js" type="text/javascript"></script>
 </head>
 <body>
-  <div id="wrapper">
+  <div id="viewporter">
 
     <div id="menu" class="stage">
       <header>
@@ -56,7 +64,7 @@
       </header>
       <ul class="levels">
         <li class="level" data-levelName="poc">
-          <img src="maps/poc_thumbnail.png" alt="" />
+          <img src="levels/poc/thumbnail.png" alt="" />
           <span class="title">POC level</span>
         </li>
       </ul>

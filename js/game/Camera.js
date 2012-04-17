@@ -6,22 +6,32 @@
 
   var b2Vec2 = Box2D.Common.Math.b2Vec2;
 
-  ns.Camera = function (world, _width, _height) {
+  ns.Camera = function (autoscale) {
     var self = this;
     // non normalized position
     self.x = 0;
     self.y = 0;
-    self.width = _width;
-    self.height = _height;
+    self.width = 300;
+    self.height = 200;
     self.scale = 30;
+
+    self.E = makeEvent({});
 
     self.resize = function (w, h) {
       self.width = w;
       self.height = h;
-      self.scale = clamp(10, 40, Math.round((w+h)/60));
+      autoscale && self.setScale(clamp(10, 40, Math.round((w+h)/60)));
     }
 
-    self.E = makeEvent({});
+    self.setWorldSize = function (w, h) {
+      self.worldwidth = w;
+      self.worldheight = h;
+    }
+
+    self.setScale = function (s) {
+      self.scale = s;
+      self.E.pub("scale", s);
+    }
 
     self.getPosition = function () {
       return new b2Vec2(self.x, self.y);
@@ -42,13 +52,13 @@
     }
 
     self.translateContext = function (ctx) {
-      ctx.translate(self.x, Math.round(-self.y-self.scale*world.height+self.height));
+      ctx.translate(self.x, Math.round(-self.y-self.scale*self.worldheight+self.height));
     }
 
     self.translateContextWithParallax = function (ctx, x, y) {
       ctx.translate(
         Math.round(self.x*x), 
-        Math.round(-self.y*y-self.scale*world.height+self.height)
+        Math.round(-self.y*y-self.scale*self.worldheight+self.height)
       );
     }
 
@@ -92,24 +102,24 @@
     // Move the camera centered to the position v
     self.focusOn = function (v) {
       var x, y;
-      if (self.scale*world.width > self.width) {
-        if (v.x*self.scale < (self.scale*world.width - self.width/2) && v.x*self.scale > self.width/2) {
+      if (self.scale*self.worldwidth > self.width) {
+        if (v.x*self.scale < (self.scale*self.worldwidth - self.width/2) && v.x*self.scale > self.width/2) {
           x = -(v.x*self.scale)+(self.width/2);
         }
-        else if(v.x*self.scale >= (self.scale*world.width-self.width/2)) {
-          x = self.width-self.scale*world.width;
+        else if(v.x*self.scale >= (self.scale*self.worldwidth-self.width/2)) {
+          x = self.width-self.scale*self.worldwidth;
         }
         else {
           x = 0;
         }
         self.x = Math.round(x);
       }
-      if(self.scale*world.height > self.height) {
-        if(v.y*self.scale < (self.scale*world.height - self.height/2) && v.y*self.scale > self.height/2) {
+      if(self.scale*self.worldheight > self.height) {
+        if(v.y*self.scale < (self.scale*self.worldheight - self.height/2) && v.y*self.scale > self.height/2) {
           y = -(v.y*self.scale)+(self.height/2);
         }
-        else if(v.y*self.scale >= (self.scale*world.height - self.height/2)) {
-          y = (self.height - self.scale*world.height);
+        else if(v.y*self.scale >= (self.scale*self.worldheight - self.height/2)) {
+          y = (self.height - self.scale*self.worldheight);
         }
         else {
           y = 0;
