@@ -5,6 +5,7 @@
 
   ns.TouchControls = function (node) {
     var self = this;
+    var position = { x: 0, y: 0 };
     self.E = makeEvent({});
 
     var started = false;
@@ -25,7 +26,12 @@
       return new b2Vec2(position.x, position.y);
     }
 
-    function onTouchStart (e) {
+    //self.getCursorPosition = getPosition;
+
+    function onMouseMove (e) {
+      syncCanvasPosition(e);
+    }
+    function onMouseDown (e) {
       e.preventDefault();
       syncCanvasPosition(e);
       self.E.pub("usePower", getPosition());
@@ -37,12 +43,14 @@
 
     self.start = function () {
       started = true;
-      node.on("touchstart", onTouchStart);
+      node.on("mousemove", onMouseMove);
+      node.on("mousedown", onMouseDown);
     }
 
     self.stop = function () {
       started = false;
-      node.off("touchstart", onTouchStart);
+      node.off("mousemove", onMouseMove);
+      node.off("mousedown", onMouseDown);
     }
   }
 
