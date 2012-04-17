@@ -219,9 +219,13 @@
 
     self.update = update;
 
+    var loopInterval;
     self.start = function () {
       init(self.world);
-      setInterval(update, 1000/60);
+      loopInterval = setInterval(update, 1000/60);
+    }
+    self.stop = function () {
+      clearInterval(loopInterval);
     }
 
     // RENDERING

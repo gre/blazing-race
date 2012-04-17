@@ -13,7 +13,7 @@
   , ImageManager = BlazingRace.ImageManager 
   , Camera = BlazingRace.Camera 
   , MouseControls = BlazingRace.MouseControls 
-  , TouchControls = BlazingRace.MouseControls 
+  , TouchControls = BlazingRace.TouchControls 
   , Renderer = BlazingRace.Renderer
   ;
 
@@ -42,7 +42,7 @@ function main (level) {
       $("#loader .loader").
         attr("max", p.total).
         attr("value", p.value).
-        text(Math.round(100*p.value/p.total)+" %");
+        text(Math.floor(100*p.value/p.total)+" %");
     });
 
     loader.E.sub("error", function (e) {

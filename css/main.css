@@ -14,7 +14,7 @@ a {
 a:hover {
   color: #e71;
 }
-#game * {
+* {
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0); 
   -moz-user-select: -moz-none; 
   -khtml-user-select: none; 
@@ -101,6 +101,9 @@ nav a:hover {
   padding: 0;
   margin: 0 auto;
   color: white;
+}
+
+.stage:not(.game) {
   background: url("../maps/poc_background.jpg") #261D16;
 }
 

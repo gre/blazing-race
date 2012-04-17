@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html lang="en">
 <head>
-  <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1;" />
+  <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1" />
 
 	<meta charset="UTF-8">
 	<title>Blazing Race</title>
@@ -27,6 +27,7 @@
   <script src="js/game/GameRecorder.js" type="text/javascript"></script>
   <script src="js/game/ImageManager.js" type="text/javascript"></script>
   <script src="js/game/Camera.js" type="text/javascript"></script>
+  <script src="js/game/TouchControls.js" type="text/javascript"></script>
   <script src="js/game/MouseControls.js" type="text/javascript"></script>
 </head>
 <body>
@@ -45,11 +46,6 @@
         Work In Progress, <a href="http://github.com/gre/blazing-race">Blazing Race</a>, bootstrapped in <a href="http://hughfdjackson.com/bbgchallenge4/">#bbgchallenge4</a> - 2012 <a href="http://greweb.fr/">greweb</a>
       </footer>
     </div>
-    <div id="loader" class="stage">
-      <h2>Loading...</h2>
-      <progress class="loader"></progress>
-      <ul class="error"></ul>
-    </div>
 
     <div id="timeTrial" class="stage">
       <header>
@@ -66,7 +62,13 @@
       </ul>
     </div>
 
-    <div id="game" class="stage">
+    <div id="loader" class="stage">
+      <h2>Loading...</h2>
+      <progress class="loader"></progress>
+      <ul class="error"></ul>
+    </div>
+
+    <div id="game" class="stage game">
       <div class="chrono">
         <span class="minutes">0</span>'<span class="seconds">00</span>"
       </div>
