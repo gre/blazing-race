@@ -221,6 +221,7 @@
 
     self.start = function () {
       init(self.world);
+      setInterval(update, 1000/60);
     }
 
     // RENDERING
@@ -269,7 +270,6 @@
         generateMapBgTexture(camera);
       }
     }
-
 
     self.setup = function (loader) {
       mapImg = loader.getResource("map");

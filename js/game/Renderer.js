@@ -148,7 +148,7 @@
       setup();
       requestAnimFrame(function loop () {
         requestAnimFrame(loop, canvas);
-        game.world.update();
+        //game.world.update();
         render();
       }, canvas);
 
