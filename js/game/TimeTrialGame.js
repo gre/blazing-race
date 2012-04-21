@@ -45,8 +45,6 @@
       self.message = self.ui.message();
       self.chrono = new Chrono();
 
-      self.uichrono.bind(self.chrono.getTime, 1000);
-
       var layers = [];
       layers.push(self.world.getBackgroundRenderable());
       layers.push(self.player.getBallRenderable());
@@ -60,7 +58,6 @@
 
     // Destroy instance
     function destroy () {
-      self.uichrono.unbind();
       // ... TODO
     }
 
@@ -108,6 +105,8 @@
 
     // Bind the components together
     function bind () {
+      self.uichrono.bind(self.chrono.getTime, 1000);
+
       $(window).on("resize", onWindowResize);
       onWindowResize();
 
@@ -158,6 +157,7 @@
 
     // Unbind the components
     function unbind () {
+      self.uichrono.unbind();
       // TODO
     }
 
