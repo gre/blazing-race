@@ -193,7 +193,7 @@
         ctx.restore();
       }
       return {
-        zindex: 10,
+        zindex: 1,
         render: drawPlayer,
         setup: function (l, camera) {
           loader = l;
@@ -265,7 +265,7 @@
         ctx.restore();
       }
       return {
-        zindex: 20,
+        zindex: 5,
       render: drawFlame,
       setup: function (l, camera) {
         initParticles(camera);
@@ -329,7 +329,7 @@
       }
 
       return {
-        zindex: 60,
+        zindex: 104,
         render: function (ctx, camera) {
           drawPowerCircle(ctx, camera);
         }
@@ -391,7 +391,7 @@
       }
 
       return {
-        zindex: 50,
+        zindex: 100,
         render: function (ctx, camera) {
           for (var i = 0; i < candles.length; ++i) {
             drawCandleIndicator(ctx, candles[i], camera, i);
@@ -426,7 +426,7 @@
       var ANGLE_INCR = _2PI / 200;
 
       return {
-        zindex: 15,
+        zindex: 20,
         render: function (ctx, camera) {
           return; // TODO : improve performance , use a cache image
 
