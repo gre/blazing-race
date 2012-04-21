@@ -66,8 +66,7 @@ function main (level) {
         player.getFlameRenderable(),
         world.getMapRenderable(),
         world.getCandlesRenderable(),
-        player.getCandlesIndicatorRenderable(world.candles),
-        player.getControlsRenderable()
+        player.getCandlesIndicatorRenderable(world.candles)
       ]);
 
       var lastWidth, lastHeight;
@@ -85,10 +84,13 @@ function main (level) {
       game.E.sub("started", function (i) {
         gameRunning = true;
         controls.start();
+        rendering.addLayer( player.getControlsRenderable(), 10 );
+
       });
       game.E.sub("stopped", function (i) {
         gameRunning = false;
         controls.stop();
+        rendering.removeLayer( player.getControlsRenderable() );
       });
 
       controls.E.sub("stopped", function (){
