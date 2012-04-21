@@ -30,6 +30,8 @@
 
     self.cursor = null;
 
+    self.RAYCAST_PLAYER = 300;
+
     var lastEnteredInNoOxygen;
     var lastPowerUse = 0;
     var lastPowerUseRemaining = 0;
@@ -408,63 +410,42 @@
     // Player lighting
     // TODO
     self.getLightingRenderable = function () {
-      function raycast (camera, angle, distance) {
-        var camshape = camera.getShape();
-        var p1 = self.getPosition();
-        var p2 = new b2Vec2(
-          p1.x+distance*Math.cos(angle),
-          p1.y+distance*Math.sin(angle)
+
+      var gradientImage;
+      function computeGradientImage (scale) {
+        var canvas = document.createElement("canvas");
+        var s = 20*scale;
+        canvas.width = s;
+        canvas.height = s;
+        var ctx = canvas.getContext("2d");
+        var gradient = ctx.createRadialGradient(
+          s/2, s/2, 0, 
+          s/2, s/2, s/2
         );
-        var closest;
-        world.world.RayCast(function (fixture, point, normal, fraction) {
-          closest = point;
-          return fraction; 
-        }, p1, p2);
-        return closest
+        gradient.addColorStop( 0, 'rgb(250, 170, 100)' );   
+        gradient.addColorStop( 1, 'rgb(0, 0, 0)' );
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, s, s);
+        gradientImage = canvas;
       }
-      var _2PI = Math.PI * 2;
-      var ANGLE_INCR = _2PI / 200;
 
       return {
-        zindex: 20,
+        zindex: 2,
         render: function (ctx, camera) {
-          return; // TODO : improve performance , use a cache image
-
-          if (self.oxygen < 0.1) return;
+          if (self.oxygen == 0) return;
           ctx.save();
-          var me = camera.realPositionToCanvas(self.getPosition());
-          var gradient = ctx.createRadialGradient(
-              me.x, me.y, 0, 
-              me.x, me.y-2*camera.scale, 6*camera.scale 
-          );
-			    gradient.addColorStop( 0, 'rgb(250, 170, 100)' );   
-			    gradient.addColorStop( 1, 'rgba(0,0,0,0)' );
-          ctx.fillStyle = gradient;
-          ctx.globalAlpha = 0.2*self.oxygen+0.2*self.power;
+          var position = self.getPosition();
+          ctx.globalAlpha = 0.3*self.oxygen+0.2*self.power;
           ctx.globalCompositeOperation = "lighter";
-          ctx.beginPath();
-          /*
-          // TODO FIXME : Box2D RayTracer seems bugged...
-          var first = true;
-          for (var a=0; a<=_2PI; a+=ANGLE_INCR) {
-            var p = raycast(camera, a, 20);
-            if (p) {
-              p = camera.realPositionToCanvas(p);
-              if (first) {
-                ctx.moveTo(p.x, p.y);
-                first = false;
-              }
-              else 
-                ctx.lineTo(p.x, p.y);
-            }
-          }
-          ctx.fill();
-          */
-          ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+          
+          world.clipAreaWithRaycasts(ctx, camera, position, self.RAYCAST_PLAYER);
+          position = camera.realPositionToCanvas(position);
+          ctx.drawImage(gradientImage, position.x-gradientImage.width/2, position.y-gradientImage.height/2);
           ctx.restore();
         },
         setup: function (l, camera) {
-
+          computeGradientImage(camera.scale);
+          camera.E.sub("scale", computeGradientImage);
         }
       }
     }

@@ -102,6 +102,7 @@
       self.rendering.addLayer(self.player.getFlameRenderable());
       self.rendering.addLayer(self.world.getMapRenderable());
       self.rendering.addLayer(self.world.getCandlesRenderable());
+      self.rendering.addLayer(self.world.getCandlesLightingRenderable());
       self.rendering.addLayer(self.player.getCandlesIndicatorRenderable(self.world.candles));
       self.rendering.addLayer(self.player.getLightingRenderable());
 

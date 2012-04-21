@@ -152,6 +152,47 @@
       self.world.QueryShape(callback, camera.getShape());
     }
 
+    self.raycast = function (position, angle, distance) {
+      var p1 = position;
+      var p2 = new b2Vec2(
+          p1.x+distance*Math.cos(angle),
+          p1.y+distance*Math.sin(angle)
+          );
+      var closestDist, closestPoint;
+      self.world.RayCast(function (fixture, point, normal, fraction) {
+        var dist = fraction;
+        var d = fixture.GetBody().GetUserData();
+        if (d && d.type=="ground" && (!closestDist || dist < closestDist)) {
+          closestDist = dist;
+          closestPoint = point;
+        }
+        return 1;
+      }, p1, p2);
+      return closestPoint;
+    }
+
+    var _2PI = Math.PI * 2;
+    self.clipAreaWithRaycasts = function (ctx, camera, position, rays) {
+      var ANGLE_INCR = _2PI / rays;
+      ctx.beginPath();
+      var first = true;
+      for (var a=0; a<=_2PI; a+=ANGLE_INCR) {
+        var p = self.raycast(position, a, 20);
+        if (p) {
+          p = camera.realPositionToCanvas(p);
+          if (first) {
+            ctx.moveTo(p.x, p.y);
+            first = false;
+          }
+          else {
+            ctx.lineTo(p.x, p.y);
+          }
+
+        }
+      }
+      ctx.clip();
+    }
+
 
     var groundFixDef = new b2FixtureDef;
     groundFixDef.density = 1.0;
@@ -328,7 +369,7 @@
       }
 
       return {
-        zindex: 9,
+        zindex: 10,
         render: function (ctx, camera) {
           for (var i = 0; i < self.candles.length; ++i) {
             drawCandle(ctx, self.candles[i], camera, i);
@@ -341,6 +382,93 @@
         }
       }
     };
+
+    // Candles lighting rendering
+    self.getCandlesLightingRenderable = function(){
+      var mapLayer, mapLayerCtx;
+      var gradientImage;
+
+      function computeImages (scale) {
+        var canvas = document.createElement("canvas");
+        var s = 20*scale;
+        canvas.width = s;
+        canvas.height = s;
+        var ctx = canvas.getContext("2d");
+        var gradient = ctx.createRadialGradient(
+          s/2, s/2, 0, 
+          s/2, s/2, s/2
+        );
+        gradient.addColorStop( 0, 'rgba(250, 180, 100, 0.2)' );   
+        gradient.addColorStop( 0.4, 'rgba(0, 0, 0, 0)' );   
+        gradient.addColorStop( 1, 'rgba(0, 0, 0, 1)' );
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, s, s);
+        gradientImage = canvas;
+
+        computeMapLayer(scale);
+      }
+
+      function computeMapLayer (scale) {
+        mapLayer = document.createElement("canvas");
+        mapLayer.width = self.width * scale;
+        mapLayer.height = self.height * scale;
+        mapLayerCtx = mapLayer.getContext("2d");
+        drawMapLayer(scale);
+      }
+
+      // TODO FIXME this is wrong doesn't support overlap
+      function drawMapLayer (scale) {
+        var ctx = mapLayerCtx;
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        // ctx.globalCompositeOperation = "";
+        for (var i = 0; i < self.candles.length; ++i) {
+          var candle = self.candles[i];
+          var position = candle.GetPosition();
+          var fixture = candle.GetFixtureList();
+          var lighted = fixture.GetBody().GetUserData().lighted;
+          if (lighted) {
+            var x = Math.floor(scale*position.x-gradientImage.width/2),
+                y = Math.floor(scale*(self.height-position.y)-gradientImage.height/2),
+                w = gradientImage.width,
+                h = gradientImage.height;
+            ctx.save();
+            ctx.clearRect(x, y, w, h);
+            ctx.beginPath();
+            ctx.rect(x, y, w, h);
+            ctx.clip();
+            ctx.drawImage(gradientImage, x, y);
+            ctx.restore();
+          }
+        }
+      }
+
+      var nbLight = 0;
+
+      return {
+        zindex: 50,
+        render: function (ctx, camera) {
+          var nb = 0;
+          for (var i = 0; i < self.candles.length; ++i) {
+            if (self.candles[i].GetFixtureList().GetBody().GetUserData().lighted)
+              ++ nb;
+          }
+          ctx.save();
+          if (nb != nbLight) {
+            drawMapLayer(camera.scale);
+            nbLight = nb;
+          }
+          ctx.globalAlpha = 0.3;
+          camera.translateContext(ctx);
+          ctx.drawImage(mapLayer, 0, 0);
+          ctx.restore();
+        },
+        setup: function (l, camera) {
+          computeImages(camera.scale);
+          camera.E.sub("scale", computeImages);
+        }
+      }
+    }
 
   }
 
