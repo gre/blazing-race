@@ -24,6 +24,7 @@
       var i = 0;
       for (var name in images) { (function(i, name){
         var src = images[name].src+"?v="+version;
+        
         var req = new XMLHttpRequest();  
         req.addEventListener("progress", function (e) {
           loadeds[i] = e.loaded;
@@ -31,19 +32,22 @@
         }, false);  
         req.addEventListener("load", function (e) {
           var img = document.createElement("img");
-          img.onload = function () {
+          img.addEventListener("load", function () {
             ++ countLoaded;
             pubProgress();
             if (self.isReady()) {
               self.E.pub("loaded");
               self.E.del("loaded");
             }
-          }
+          });
+          img.addEventListener("error", function (e) {
+            self.E.pub("error", { msg: "load failed for "+images[name].src+" (size limit?)" });
+          });
           img.src = src;
           resources[name] = img;
         }, false);  
         req.addEventListener("error", function (e) {
-          self.E.pub("error", { msg: "load error for "+src });
+          self.E.pub("error", { msg: "error for "+images[name].src  });
         }, false);  
         req.open("GET", src, true);  
         req.send();

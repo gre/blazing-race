@@ -67,6 +67,10 @@
         render(camera);
       }, canvas);
     }
+
+    this.stop = function () {
+      // TODO
+    }
   }
 
 }(window.BlazingRace));

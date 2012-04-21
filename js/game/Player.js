@@ -28,8 +28,6 @@
 
     self.cursor = null;
 
-    var pe;
-
     var lastEnteredInNoOxygen;
     var lastPowerUse = 0;
     var lastPowerUseRemaining = 0;
@@ -60,6 +58,22 @@
       self.noOxygenArea = false;
     });
 
+    world.E.sub("update", function (i) {
+      var now = +new Date();
+      if (self.power < 1) {
+        self.power = clamp(0, 1, lastPowerUseRemaining+(now-lastPowerUse)/POWER_LOAD_SPEED);
+      }
+      if (self.oxygen>0) {
+        if (self.noOxygenArea) {
+          self.oxygen = clamp(0, 1, 1-(now-lastEnteredInNoOxygen)/NO_OXYGEN_CONSUMPTION_SPEED);
+          self.oxygen==0 && self.die();
+        }
+        else {
+          self.oxygen = 1;
+        }
+      }
+    });
+
     function createPlayerBody (size, x, y) {
       var bodyDef = new b2BodyDef;
       bodyDef.type = b2Body.b2_dynamicBody;
@@ -81,21 +95,6 @@
       return smoothstep(0, self.MAX_DIST, dist);
     }
 
-    world.E.sub("update", function (i) {
-      var now = +new Date();
-      if (self.power < 1) {
-        self.power = clamp(0, 1, lastPowerUseRemaining+(now-lastPowerUse)/POWER_LOAD_SPEED);
-      }
-      if (self.oxygen>0) {
-        if (self.noOxygenArea) {
-          self.oxygen = clamp(0, 1, 1-(now-lastEnteredInNoOxygen)/NO_OXYGEN_CONSUMPTION_SPEED);
-          self.oxygen==0 && self.die();
-        }
-        else {
-          self.oxygen = 1;
-        }
-      }
-    });
 
     self.usePower = function (forceVector) {
       var force = forceVector.Copy();
@@ -126,6 +125,10 @@
       self.ignition();
     }
 
+    self.stop = function () {
+
+    }
+
     self.isDead = function () {
       return self.oxygen <= 0;
     }
@@ -151,13 +154,11 @@
 
     self.ignition = function () {
       self.oxygen = 1;
-      initParticles();
       self.E.pub("live");
     }
 
     self.die = function () {
       self.oxygen = 0;
-      pe.stopParticleEmitter();
       self.E.pub("die");
     }
 
@@ -201,40 +202,42 @@
 
     // Flame Rendering
 
-    var PARTICLE_SIZE = 1.1;
-    var PARTICLE_LIFESPAN = 14;
-
-    function getPeSize (camera) {
-      return PARTICLE_SIZE * camera.scale;
-    }
-
-    function initParticles (camera) {
-      pe && pe.stopParticleEmitter();
-      pe = new cParticleEmitter();
-      pe.maxParticles = 60;
-      pe.lifeSpan = PARTICLE_LIFESPAN;
-      pe.lifeSpanRandom = 1;
-      pe.position.x = -1000;
-      pe.position.y = -1000;
-      pe.startColour = [ 240, 208, 68, 1 ];
-      pe.startColourRandom = [ 40, 40, 60, 0 ];
-      pe.finishColour = [ 245, 35, 0, 0 ];  
-      pe.finishColourRandom = [ 20, 20, 20, 0 ];
-      if (camera) {
-        pe.gravity = { x: 0, y: -0.02*camera.scale };
-        pe.size = getPeSize(camera);
-        pe.sizeRandom = 0.4*camera.scale;
-        pe.speed = 0.01*camera.scale;
-        pe.speedRandom = 0.005*camera.scale;
-        pe.sharpness = .3*camera.scale;
-        pe.sharpnessRandom = .1*camera.scale;
-        pe.positionRandom = { x: 0.1*camera.scale, y: 0.1*camera.scale };
-      }
-      pe.init();
-    }
 
     self.getFlameRenderable = function(){
- 
+      var pe;
+
+      var PARTICLE_SIZE = 1.1;
+      var PARTICLE_LIFESPAN = 14;
+
+      function getPeSize (camera) {
+        return PARTICLE_SIZE * camera.scale;
+      }
+
+      function initParticles (camera) {
+        pe && pe.stopParticleEmitter();
+        pe = new cParticleEmitter();
+        pe.maxParticles = 60;
+        pe.lifeSpan = PARTICLE_LIFESPAN;
+        pe.lifeSpanRandom = 1;
+        pe.position.x = -1000;
+        pe.position.y = -1000;
+        pe.startColour = [ 240, 208, 68, 1 ];
+        pe.startColourRandom = [ 40, 40, 60, 0 ];
+        pe.finishColour = [ 245, 35, 0, 0 ];  
+        pe.finishColourRandom = [ 20, 20, 20, 0 ];
+        if (camera) {
+          pe.gravity = { x: 0, y: -0.02*camera.scale };
+          pe.size = getPeSize(camera);
+          pe.sizeRandom = 0.4*camera.scale;
+          pe.speed = 0.01*camera.scale;
+          pe.speedRandom = 0.005*camera.scale;
+          pe.sharpness = .3*camera.scale;
+          pe.sharpnessRandom = .1*camera.scale;
+          pe.positionRandom = { x: 0.1*camera.scale, y: 0.1*camera.scale };
+        }
+        pe.init();
+      }
+
       var lastEmit = 0;
       function drawFlame (ctx, camera) {
         ctx.save();
@@ -259,7 +262,16 @@
         ctx.restore();
       }
       return {
-      render: drawFlame
+      render: drawFlame,
+      setup: function (l, camera) {
+        initParticles(camera);
+        self.E.sub("live", function () {
+          initParticles(camera);
+        });
+        self.E.sub("die", function () {
+          pe.stopParticleEmitter();
+        });
+      }
     }};
     
 

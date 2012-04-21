@@ -14,6 +14,7 @@
 
     game.E.sub("stopped", stop);
     game.E.sub("started", start);
+
   }
 
 }(window.BlazingRace));

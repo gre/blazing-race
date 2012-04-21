@@ -9,13 +9,13 @@
 
 	<meta name="viewport" content="initial-scale=1.0,maximum-scale=1.0" />
 
-  <link href='http://fonts.googleapis.com/css?family=Chau+Philomene+One' rel='stylesheet' type='text/css'>  
+  <link href='http://fonts.googleapis.com/css?family=Chau+Philomene+One' rel='stylesheet' type='text/css'>
   <link rel="stylesheet" href="css/main.css" />
 
   <script src="js/lib/jquery-1.7.2.min.js" type="text/javascript"></script>
 	<script src="js/lib/viewporter.js"></script>  
-  	<script>
-		// orientation locking
+  <script>
+    // orientation locking
 		$(window).bind('viewportready viewportchange', function() {
 			$('#orientationlock').toggle(!viewporter.isLandscape());
 		});
@@ -30,13 +30,16 @@
   <script src="js/game/Map.js" type="text/javascript"></script>
   <script src="js/game/World.js" type="text/javascript"></script>
   <script src="js/game/Player.js" type="text/javascript"></script>
-  <script src="js/game/Game.js" type="text/javascript"></script>
   <script src="js/game/Renderer.js" type="text/javascript"></script>
   <script src="js/game/GameRecorder.js" type="text/javascript"></script>
   <script src="js/game/ImageManager.js" type="text/javascript"></script>
   <script src="js/game/Camera.js" type="text/javascript"></script>
   <script src="js/game/TouchControls.js" type="text/javascript"></script>
   <script src="js/game/MouseControls.js" type="text/javascript"></script>
+  <script src="js/game/Chrono.js" type="text/javascript"></script>
+  <script src="js/game/Interface.js" type="text/javascript"></script>
+
+  <script src="js/game/TimeTrialGame.js" type="text/javascript"></script>
 </head>
 <body>
   <div id="viewporter">
@@ -81,8 +84,8 @@
         <span class="minutes">0</span>'<span class="seconds">00</span>"
       </div>
       <div class="front">
+        <div class="title"></div>
         <div class="message"></div>
-        <div class="value"></div>
       </div>
       <canvas class="game"></canvas>
     </div>
