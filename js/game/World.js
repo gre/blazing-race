@@ -240,6 +240,7 @@
       }
       
       return {
+        zindex: -20,
         render: function (ctx, camera) {
           ctx.save();
           camera.translateContextWithParallax(ctx, parallax.x, parallax.y);
@@ -263,6 +264,7 @@
         mapTexture = loader.getResource("map", scale*self.width, scale*self.height);
       }
       return {
+        zindex: -10,
         render: function (ctx, camera) {
           ctx.save();
           camera.translateContext(ctx);
@@ -321,6 +323,7 @@
       }
 
       return {
+        zindex: -5,
         render: function (ctx, camera) {
           for (var i = 0; i < self.candles.length; ++i) {
             drawCandle(ctx, self.candles[i], camera, i);

@@ -191,6 +191,7 @@
         ctx.restore();
       }
       return {
+        zindex: 10,
         render: drawPlayer,
         setup: function (l, camera) {
           loader = l;
@@ -262,6 +263,7 @@
         ctx.restore();
       }
       return {
+        zindex: 20,
       render: drawFlame,
       setup: function (l, camera) {
         initParticles(camera);
@@ -325,8 +327,9 @@
       }
 
       return {
+        zindex: 60,
         render: function (ctx, camera) {
-          self.cursor && drawPowerCircle(ctx, camera);
+          drawPowerCircle(ctx, camera);
         }
       }
     };
@@ -386,6 +389,7 @@
       }
 
       return {
+        zindex: 50,
         render: function (ctx, camera) {
           for (var i = 0; i < candles.length; ++i) {
             drawCandleIndicator(ctx, candles[i], camera, i);

@@ -54,7 +54,6 @@
       layers.push(self.world.getMapRenderable());
       layers.push(self.world.getCandlesRenderable());
       layers.push(self.player.getCandlesIndicatorRenderable(self.world.candles));
-      layers.push(self.player.getControlsRenderable());
 
       self.rendering.setLayers(layers);
     }
@@ -119,11 +118,13 @@
         self.controls.stop();
       });
 
+      var controlsRenderable = null;
       self.controls.E.sub("stopped", function (){
-        self.player.setCursor(null);
+        controlsRenderable && self.rendering.removeLayer(controlsRenderable);
       });
       self.controls.E.sub("started", function (){
-        self.player.setCursor({ x: 0, y: 0 });
+        controlsRenderable && self.rendering.removeLayer(controlsRenderable);
+        self.rendering.addLayer(controlsRenderable = self.player.getControlsRenderable());
       });
 
       self.controls.E.sub("position", function (position) {
