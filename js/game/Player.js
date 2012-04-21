@@ -403,6 +403,19 @@
       }
     }
 
+    // Player lighting
+    // TODO
+    self.getLightingRenderable = function () {
+      return {
+        zindex: 40,
+        render: function (ctx, camera) {
+        },
+        setup: function (l, camera) {
+
+        }
+      }
+    }
+
   }
 
 }(window.BlazingRace));

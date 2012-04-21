@@ -44,16 +44,6 @@
       self.uichrono = self.ui.chrono();
       self.message = self.ui.message();
       self.chrono = new Chrono();
-
-      var layers = [];
-      layers.push(self.world.getBackgroundRenderable());
-      layers.push(self.player.getBallRenderable());
-      layers.push(self.player.getFlameRenderable());
-      layers.push(self.world.getMapRenderable());
-      layers.push(self.world.getCandlesRenderable());
-      layers.push(self.player.getCandlesIndicatorRenderable(self.world.candles));
-
-      self.rendering.setLayers(layers);
     }
 
     // Destroy instance
@@ -106,6 +96,14 @@
     // Bind the components together
     function bind () {
       self.uichrono.bind(self.chrono.getTime, 1000);
+
+      self.rendering.addLayer(self.world.getBackgroundRenderable());
+      self.rendering.addLayer(self.player.getBallRenderable());
+      self.rendering.addLayer(self.player.getFlameRenderable());
+      self.rendering.addLayer(self.world.getMapRenderable());
+      self.rendering.addLayer(self.world.getCandlesRenderable());
+      self.rendering.addLayer(self.player.getCandlesIndicatorRenderable(self.world.candles));
+      self.rendering.addLayer(self.player.getLightingRenderable());
 
       $(window).on("resize", onWindowResize);
       onWindowResize();
