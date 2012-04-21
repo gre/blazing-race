@@ -15,7 +15,7 @@
   , smoothstep = BlazingRace.util.smoothstep
   ;
 
-
+  // TODO clean code and comments
   ns.World = function (_map) {
     var self = this;
     self.map = _map.data; // FIXME
@@ -146,6 +146,11 @@
       }
     }
     self.world.SetContactListener(contactListener);
+
+
+    self.forAllShapeInCamera = function (camera, callback) {
+      self.world.QueryShape(callback, camera.getShape());
+    }
 
 
     var groundFixDef = new b2FixtureDef;

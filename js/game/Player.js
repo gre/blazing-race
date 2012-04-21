@@ -8,6 +8,8 @@
   ,	b2Body = Box2D.Dynamics.b2Body
   ,	b2CircleShape = Box2D.Collision.Shapes.b2CircleShape
   , b2Vec2 = Box2D.Common.Math.b2Vec2
+  , b2RayCastInput = Box2D.Collision.b2RayCastInput
+  , b2RayCastOutput = Box2D.Collision.b2RayCastOutput
   ;
 
   ns.Player = function (world, _x, _y) {
@@ -406,9 +408,58 @@
     // Player lighting
     // TODO
     self.getLightingRenderable = function () {
+      function raycast (camera, angle, distance) {
+        var camshape = camera.getShape();
+        var p1 = self.getPosition();
+        var p2 = new b2Vec2(
+          p1.x+distance*Math.cos(angle),
+          p1.y+distance*Math.sin(angle)
+        );
+        var closest;
+        world.world.RayCast(function (fixture, point, normal, fraction) {
+          closest = point;
+          return fraction; 
+        }, p1, p2);
+        return closest
+      }
+      var _2PI = Math.PI * 2;
+      var ANGLE_INCR = _2PI / 200;
+
       return {
-        zindex: 40,
+        zindex: 15,
         render: function (ctx, camera) {
+          if (self.oxygen < 0.1) return;
+          ctx.save();
+          var me = camera.realPositionToCanvas(self.getPosition());
+          var gradient = ctx.createRadialGradient(
+              me.x, me.y, 0, 
+              me.x, me.y-2*camera.scale, 6*camera.scale 
+          );
+			    gradient.addColorStop( 0, 'rgb(250, 170, 100)' );   
+			    gradient.addColorStop( 1, 'rgba(0,0,0,0)' );
+          ctx.fillStyle = gradient;
+          ctx.globalAlpha = 0.2*self.oxygen+0.2*self.power;
+          ctx.globalCompositeOperation = "lighter";
+          ctx.beginPath();
+          /*
+          // TODO FIXME : Box2D RayTracer seems bugged...
+          var first = true;
+          for (var a=0; a<=_2PI; a+=ANGLE_INCR) {
+            var p = raycast(camera, a, 20);
+            if (p) {
+              p = camera.realPositionToCanvas(p);
+              if (first) {
+                ctx.moveTo(p.x, p.y);
+                first = false;
+              }
+              else 
+                ctx.lineTo(p.x, p.y);
+            }
+          }
+          ctx.fill();
+          */
+          ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+          ctx.restore();
         },
         setup: function (l, camera) {
 

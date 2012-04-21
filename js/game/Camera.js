@@ -4,7 +4,9 @@
   , clamp = BlazingRace.util.clamp
   ;
 
-  var b2Vec2 = Box2D.Common.Math.b2Vec2;
+  var b2Vec2 = Box2D.Common.Math.b2Vec2
+  ,	b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape
+  ;
 
   ns.Camera = function (autoscale) {
     var self = this;
@@ -16,6 +18,12 @@
     self.scale = 30;
 
     self.E = makeEvent({});
+
+    self.getShape = function () {
+      var topleft = self.canvasToRealPosition(new b2Vec2(0,0) );
+      var bottomright = self.canvasToRealPosition(new b2Vec2(self.width,self.height) );
+      return b2PolygonShape.AsOrientedBox(bottomright.x-topleft.x, topleft.y-bottomright.y, new b2Vec2((topleft.x+bottomright.x)/2, (topleft.y+bottomright.y)/2));
+    }
 
     self.resize = function (w, h) {
       self.width = w;
@@ -36,7 +44,7 @@
     self.getPosition = function () {
       return new b2Vec2(self.x, self.y);
     }
-
+    
     self.canvasToRealPosition = function (p) {
       return new b2Vec2(
         (-self.x + p.x)/self.scale,
