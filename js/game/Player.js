@@ -428,6 +428,8 @@
       return {
         zindex: 15,
         render: function (ctx, camera) {
+          return; // TODO : improve performance , use a cache image
+
           if (self.oxygen < 0.1) return;
           ctx.save();
           var me = camera.realPositionToCanvas(self.getPosition());
