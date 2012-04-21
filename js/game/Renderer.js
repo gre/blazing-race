@@ -3,7 +3,10 @@
   ns.Renderer = function (canvas) {
     var self = this;
 
+    self.layers = [];
+
     var ctx = canvas.getContext("2d");
+    var camera, loader;
 
     self.resize = function (w, h) {
       canvas.width = w;
@@ -13,12 +16,17 @@
     function setup (camera, loader)  {
       for (var i = 0; i < self.layers.length; ++ i) {
         var layer = self.layers[i];
-        layer.setup && layer.setup(loader, camera);
+        if (layer.setup) {
+            layer.setup(loader, camera);
+            layer._setup = layer.setup;
+            layer.setup = null;
+        }
       }
     }
 
     self.setLayers = function (layers) {
       self.layers = layers;
+      loader && setup (camera, loader);
     }
 
     function render (camera) {
@@ -28,7 +36,9 @@
       ctx.restore();
     }
 
-    this.start = function (camera, loader) {
+    this.start = function (cam, loa) {
+      camera = cam;
+      loader = loa;
       setup(camera, loader);
       requestAnimFrame(function loop () {
         requestAnimFrame(loop, canvas);
