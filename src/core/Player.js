@@ -16,6 +16,7 @@
     var self = this;
     self.size = 0.5;
     self.body = createPlayerBody(self.size, _x, _y);
+    var deads = [];
 
     self.candleCount = 0;
 
@@ -150,9 +151,20 @@
       return powerUsage * POWER_FORCE;
     }
 
+    self.addDead = function (size, x, y) {
+      var clone = createPlayerBody(size, x, y);
+      world.bindArea(clone, "water");
+      deads.push({
+        body: clone,
+        size: size
+      });
+    }
+
     self.reignition = function () {
+      var p = self.getPosition();
+      self.addDead(self.size, p.x, p.y);
       self.body.SetPosition(self.rez);
-      self.body.ApplyImpulse(new b2Vec2(0, -0.001), self.getPosition());
+      self.body.ApplyImpulse(new b2Vec2(0, -0.001), p);
       self.ignition();
     }
 
@@ -194,9 +206,32 @@
         ctx.fill();
         ctx.restore();
       }
+
+      function drawDead (ctx, camera, dead) {
+        var scale = camera.scale;
+        ctx.save();
+        var p = camera.realPositionToCanvas(dead.body.GetPosition());
+        ctx.translate(p.x, p.y);
+        ctx.rotate(-dead.body.GetAngle());
+        ctx.drawImage(coal, Math.round(-coal.width/2), Math.round(-coal.height/2));
+        ctx.fillStyle="rgba(255, 100, 0, 0.1)";
+        ctx.globalCompositeOperation = "lighter";
+        ctx.beginPath();
+        ctx.arc(0, 0, dead.size*scale, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function draw (ctx, camera) {
+        drawPlayer(ctx, camera);
+        for (var i=0; i<deads.length; ++i) {
+          drawDead(ctx, camera, deads[i]);
+        }
+      }
+
       return {
         zindex: 1,
-        render: drawPlayer,
+        render: draw,
         setup: function (l, camera) {
           loader = l;
           generateCoal(camera.scale);
